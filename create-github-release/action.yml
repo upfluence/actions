@@ -8,6 +8,10 @@ inputs:
     description: '[CSV] attachments to uplaod to the release (accept globs)'
     required: false
     default: ''
+  github-token:
+    required: false
+    description: 'github token to be used'
+    default: ${{ github.token }}
 runs:
   using: 'composite'
   steps:
@@ -18,3 +22,5 @@ runs:
       shell: bash
     - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments ${{ inputs.attachments }}
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}

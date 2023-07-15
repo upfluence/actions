@@ -9,6 +9,10 @@ inputs:
     description: 'override the bumping strategy on a per branch basis, you can pass it as master=bump_major,staging=bump_minor'
     required: false
     default: ''
+  github-token:
+    required: false
+    description: 'github token to be used'
+    default: ${{ github.token }}
 outputs:
   version:
     description: 'the target version'
@@ -24,3 +28,5 @@ runs:
     - id: bump-version
       run: ~/go/bin/bump-version --strategy ${{ inputs.strategy }} --strategies-by-branch ${{ inputs.strategies-by-branch }}
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
