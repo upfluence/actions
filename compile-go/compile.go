@@ -184,8 +184,7 @@ type compiler struct {
 
 	nt nameTemplate
 
-	repo      string
-	workspace string
+	repo string
 }
 
 func newCompiler(c config, cctx toolkit.CommandContext) (*compiler, error) {
@@ -196,13 +195,12 @@ func newCompiler(c config, cctx toolkit.CommandContext) (*compiler, error) {
 	}
 
 	return &compiler{
-		path:      p,
-		distDir:   c.DistDir,
-		cgo:       c.CGo,
-		links:     c.links(cctx),
-		nt:        c.NameTemplate,
-		repo:      cctx.Repository,
-		workspace: cctx.Workspace,
+		path:    p,
+		distDir: c.DistDir,
+		cgo:     c.CGo,
+		links:   c.links(cctx),
+		nt:      c.NameTemplate,
+		repo:    cctx.Repository,
 	}, nil
 }
 
@@ -219,12 +217,6 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 		ldFlags = append(ldFlags, fmt.Sprintf("-X %s=%s", k, v))
 	}
 
-	relPath, err := filepath.Rel(c.workspace, b.Path)
-
-	if err != nil {
-		return err
-	}
-
 	cmd := exec.CommandContext(
 		ctx,
 		c.path,
@@ -233,7 +225,7 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 		strings.Join(ldFlags, " "),
 		"-o",
 		filepath.Join(c.distDir, t),
-		"./"+relPath,
+		"./"+b.Path,
 	)
 
 	cmd.Stdout = cctx.CommandContext.Stdout
