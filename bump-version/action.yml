@@ -16,10 +16,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: [ ! -f "./bump-version" ] && curl -l https://github.com/upfluence/actions/releases/latest/download/bump-version > bump-version
+    - run: [ ! -f "~/go/bin/bump-version" ] && curl -l https://github.com/upfluence/actions/releases/latest/download/bump-version > ~/go/binbump-version
       shell: bash
-    - run: chmod +x bump-version
+    - run: chmod +x ~/go/bin/bump-version
       shell: bash
     - id: bump-version
-      run: ./bump-version --strategy ${{ inputs.strategy }} --strategies-by-branch ${{ inputs.strategies-by-branch }}
+      run: ~/go/bin/bump-version --strategy ${{ inputs.strategy }} --strategies-by-branch ${{ inputs.strategies-by-branch }}
       shell: bash

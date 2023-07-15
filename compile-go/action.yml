@@ -39,11 +39,11 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: [ ! -f "./compile-go" ] && curl -l https://github.com/upfluence/actions/releases/latest/download/compile-go > compile-go
+    - run: [ ! -f "~/go/bin/compile-go" ] && curl -l https://github.com/upfluence/actions/releases/latest/download/compile-go > ~/go/bin/compile-go
       shell: bash
-    - run: chmod +x compile-go
+    - run: chmod +x ~/go/bin/compile-go
       shell: bash
     - run: mkdir -p ${{ inputs.dist-dir }}
       shell: bash
-    - run: ./compile-go --executable-paths ${{ inputs.executable-paths }} --release-version ${{ inputs.version }} --dist-dir ${{ inputs.dist-dir }} --oss ${{ inputs.os }} --archs ${{ inputs.arch }} --cgo ${{ inputs.cgo }} --linker-mode ${{ inputs.linker-mode }} --additional-links ${{ inputs.additional-links }} --name-template ${{ inputs.name-template }}
+    - run: ~/go/bin/compile-go --executable-paths ${{ inputs.executable-paths }} --release-version ${{ inputs.version }} --dist-dir ${{ inputs.dist-dir }} --oss ${{ inputs.os }} --archs ${{ inputs.arch }} --cgo ${{ inputs.cgo }} --linker-mode ${{ inputs.linker-mode }} --additional-links ${{ inputs.additional-links }} --name-template ${{ inputs.name-template }}
       shell: bash

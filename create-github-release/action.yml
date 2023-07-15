@@ -11,9 +11,9 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: [ ! -f "./create-github-release" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/create-github-release > create-github-release
+    - run: [ ! -f "~/go/bin/create-github-release" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/create-github-release > ~/go/bin/create-github-release
       shell: bash
-    - run: chmod +x create-github-release
+    - run: chmod +x ~/go/bin/create-github-release
       shell: bash
-    - run: ./create-github-release --release-version ${{ inputs.version }} --attachments ${{ inputs.attachments }}
+    - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments ${{ inputs.attachments }}
       shell: bash
