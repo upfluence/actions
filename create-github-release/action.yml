@@ -11,7 +11,8 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: [ ! -f "~/go/bin/create-github-release" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/create-github-release > ~/go/bin/create-github-release
+    - run: |
+        [ ! -f "~/go/bin/create-github-release" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/create-github-release > ~/go/bin/create-github-release
       shell: bash
     - run: chmod +x ~/go/bin/create-github-release
       shell: bash
