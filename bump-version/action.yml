@@ -1,0 +1,25 @@
+name: 'bump version'
+description: ''
+inputs:
+  strategy:
+    description: 'bumping strategy to be used, available strategies are: bump_major, bump_minor, bump_patch, bump_rc'
+    required: false
+    default: ''
+  strategies-by-branch:
+    description: 'override the bumping strategy on a per branch basis, you can pass it as master=bump_major,staging=bump_minor'
+    required: false
+    default: ''
+outputs:
+  version:
+    description: 'the target version'
+    value: ${{ steps.bump-version.outputs.version }}
+runs:
+  using: 'composite'
+  steps:
+    - run: [ ! -f "./bump-version" ] && curl -l https://github.com/upfluence/actions/releases/latest/download/bump-version > bump-version
+      shell: bash
+    - run: chmod +x bump-version
+      shell: bash
+    - id: bump-version
+      run: ./bump-version --strategy ${{ inputs.strategy }} --strategies-by-branch ${{ inputs.strategies-by-branch }}
+      shell: bash

@@ -1,0 +1,19 @@
+name: 'Create github release'
+description: ''
+inputs:
+  version:
+    description: 'target version'
+    required: true
+  attachments:
+    description: '[CSV] attachments to uplaod to the release (accept globs)'
+    required: false
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - run: [ ! -f "./create-github-release" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/create-github-release > create-github-release
+      shell: bash
+    - run: chmod +x create-github-release
+      shell: bash
+    - run: ./create-github-release --release-version ${{ inputs.version }} --attachments ${{ inputs.attachments }}
+      shell: bash

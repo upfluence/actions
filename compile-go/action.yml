@@ -1,0 +1,49 @@
+name: 'compile go'
+description: ''
+inputs:
+  executable-paths:
+    description: '[CSV] list of paths to build (accept globs)'
+    required: true
+  dist-dir:
+    description: 'dist directory'
+    required: false
+    default: '.'
+  version:
+    description: 'target version'
+    required: true
+  linker-mode:
+    description: 'linker mode to pass build info, valid values: pkg,cli,none'
+    required: false
+    default: 'pkg'
+  additional-links:
+    description: 'additional linker values, i.e. pkg1.Var=Val1,pkg2.Var=Val2'
+    required: false
+    default: ''
+  os:
+    description: '[CSV] GOOS used'
+    required: false
+    default: 'linux'
+  arch:
+    description: '[CSV] GOARCH used'
+    required: false
+    default: 'amd64'
+  cgo:
+    description: 'CGO_ENABLED used'
+    required: false
+    default: 'false'
+  name-template:
+    description: 'Go template of the executable'
+    required: false
+    default: '{{ .Name }}'
+
+runs:
+  using: 'composite'
+  steps:
+    - run: [ ! -f "./compile-go" ] && curl -l https://github.com/upfluence/actions/releases/latest/download/compile-go > compile-go
+      shell: bash
+    - run: chmod +x compile-go
+      shell: bash
+    - run: mkdir -p ${{ inputs.dist-dir }}
+      shell: bash
+    - run: ./compile-go --executable-paths ${{ inputs.executable-paths }} --release-version ${{ inputs.version }} --dist-dir ${{ inputs.dist-dir }} --oss ${{ inputs.os }} --archs ${{ inputs.arch }} --cgo ${{ inputs.cgo }} --linker-mode ${{ inputs.linker-mode }} --additional-links ${{ inputs.additional-links }} --name-template ${{ inputs.name-template }}
+      shell: bash
