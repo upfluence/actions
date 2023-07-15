@@ -20,7 +20,7 @@ runs:
       shell: bash
     - run: chmod +x ~/go/bin/create-github-release
       shell: bash
-    - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments ${{ inputs.attachments }}
+    - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments '${{ inputs.attachments }}'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
