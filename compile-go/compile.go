@@ -11,7 +11,6 @@ import (
 	"text/template"
 
 	"github.com/upfluence/actions/pkg/toolkit"
-	xcli "github.com/upfluence/cfg/x/cli"
 	"github.com/upfluence/errors"
 )
 
@@ -117,7 +116,7 @@ func (c config) executablePaths(cctx toolkit.CommandContext) ([]string, error) {
 	var paths []string
 
 	for _, exc := range c.ExecutablePaths {
-		fnames, err := filepath.Glob(filepath.Join(cctx.Workspace, exc))
+		fnames, err := filepath.Glob(filepath.Join(".", exc))
 
 		if err != nil {
 			return nil, errors.Wrapf(err, "invalid glob %q", exc)
@@ -207,7 +206,7 @@ func newCompiler(c config, cctx toolkit.CommandContext) (*compiler, error) {
 	}, nil
 }
 
-func (c *compiler) execute(ctx context.Context, b build, cctx xcli.CommandContext) error {
+func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandContext) error {
 	t, err := c.nt.render(b)
 
 	if err != nil {
@@ -237,8 +236,8 @@ func (c *compiler) execute(ctx context.Context, b build, cctx xcli.CommandContex
 		"./"+relPath,
 	)
 
-	cmd.Stdout = cctx.Stdout
-	cmd.Stderr = cctx.Stderr
+	cmd.Stdout = cctx.CommandContext.Stdout
+	cmd.Stderr = cctx.CommandContext.Stderr
 
 	cgoInt := 0
 
@@ -252,6 +251,10 @@ func (c *compiler) execute(ctx context.Context, b build, cctx xcli.CommandContex
 		fmt.Sprintf("GOARCH=%s", b.Arch),
 		fmt.Sprintf("CGO_ENABLED=%d", cgoInt),
 	)
+
+	if err == nil {
+		cctx.Logger.Noticef("Finished compiling %s", filepath.Join(c.distDir, t))
+	}
 
 	return cmd.Run()
 }
@@ -273,7 +276,7 @@ func main() {
 			}
 
 			for _, b := range bs {
-				if err := cp.execute(ctx, b, cctx.CommandContext); err != nil {
+				if err := cp.execute(ctx, b, cctx); err != nil {
 					return err
 				}
 			}

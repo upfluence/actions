@@ -51,7 +51,7 @@ jobs:
       - name: Compile binaries
         uses: ./compile-go
         with:
-          executable-paths: ./bump-actions,./compile-go,./create-github-release
+          executable-paths: ./bump-version,./compile-go,./create-github-release
           linker-mode: cli
           dist-dir: dist/
           version: ${{ steps.bump-version.outputs.version }}

@@ -96,6 +96,11 @@ func main() {
 				c.strategy(cctx).inc(tag)
 			}
 
+			cctx.Logger.Noticef(
+				"Version computed: %s",
+				tag.String(),
+			)
+
 			return cctx.Output.WriteKeyValue("version", tag.String())
 		},
 	).Run(context.Background())

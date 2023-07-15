@@ -156,7 +156,7 @@ type localConfig struct {
 	RefName string `env:"REF_NAME"`
 	RefType string `env:"REF_TYPE"`
 
-	Repository string `env:"REPOSITRY"`
+	Repository string `env:"REPOSITORY"`
 	Workspace  string `env:"WORKSPACE"`
 }
 
