@@ -100,7 +100,7 @@ func (lf *lazyFile) Write(buf []byte) (int, error) {
 			return
 		}
 
-		lf.f, lf.err = os.OpenFile(lf.fname, os.O_APPEND|os.O_WRONLY, 0644)
+		lf.f, lf.err = os.OpenFile(lf.fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	})
 
 	if lf.err != nil {
