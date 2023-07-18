@@ -7,7 +7,7 @@ import (
 	"github.com/upfluence/actions/pkg/toolkit"
 )
 
-func fetchLatestTag(ctx context.Context, cctx toolkit.CommandContext) (*version, error) {
+func fetchLatestTag(ctx context.Context, cctx toolkit.CommandContext) (*version, bool, error) {
 	org, repo := cctx.SplittedRepository()
 
 	tags, _, err := cctx.Client.Repositories.ListTags(
@@ -17,12 +17,8 @@ func fetchLatestTag(ctx context.Context, cctx toolkit.CommandContext) (*version,
 		&github.ListOptions{PerPage: 100},
 	)
 
-	if err != nil {
-		return nil, err
-	}
-
-	if len(tags) == 0 {
-		return parse("v0.0.0")
+	if err != nil || len(tags) == 0 {
+		return nil, false, err
 	}
 
 	var v *version
@@ -44,14 +40,22 @@ func fetchLatestTag(ctx context.Context, cctx toolkit.CommandContext) (*version,
 		}
 	}
 
-	return parse(tags[0].GetName())
+	t, err := parse(tags[0].GetName())
+
+	return t, true, err
 }
 
 func fetchContext(ctx context.Context, cctx toolkit.CommandContext) (*version, []string, error) {
-	tag, err := fetchLatestTag(ctx, cctx)
+	tag, ok, err := fetchLatestTag(ctx, cctx)
 
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if !ok {
+		t, err := parse("v0.0.0")
+
+		return t, nil, err
 	}
 
 	org, repo := cctx.SplittedRepository()
