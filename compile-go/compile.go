@@ -4,14 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
 
-	"github.com/upfluence/actions/pkg/toolkit"
 	"github.com/upfluence/errors"
+	"github.com/upfluence/log"
+	"github.com/upfluence/log/record"
+
+	"github.com/upfluence/actions/pkg/executil"
+	"github.com/upfluence/actions/pkg/toolkit"
 )
 
 type linkerMode int
@@ -174,8 +177,18 @@ func (c config) compilerPath() (string, error) {
 	return exec.LookPath("go")
 }
 
+func (c config) executor(l log.Logger) executil.Executor {
+	return executil.VerboseExecutor{
+		Next:   executil.StdExecutor{PropagateEnviron: true},
+		Logger: l,
+		Level:  record.Debug,
+	}
+}
+
 type compiler struct {
 	path string
+
+	executor executil.Executor
 
 	distDir string
 	cgo     bool
@@ -195,12 +208,13 @@ func newCompiler(c config, cctx toolkit.CommandContext) (*compiler, error) {
 	}
 
 	return &compiler{
-		path:    p,
-		distDir: c.DistDir,
-		cgo:     c.CGo,
-		links:   c.links(cctx),
-		nt:      c.NameTemplate,
-		repo:    cctx.Repository,
+		path:     p,
+		executor: c.executor(cctx.Logger),
+		distDir:  c.DistDir,
+		cgo:      c.CGo,
+		links:    c.links(cctx),
+		nt:       c.NameTemplate,
+		repo:     cctx.Repository,
 	}, nil
 }
 
@@ -217,38 +231,40 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 		ldFlags = append(ldFlags, fmt.Sprintf("-X %s=%s", k, v))
 	}
 
-	cmd := exec.CommandContext(
-		ctx,
-		c.path,
-		"build",
-		"-ldflags",
-		strings.Join(ldFlags, " "),
-		"-o",
-		filepath.Join(c.distDir, t),
-		"./"+b.Path,
-	)
-
-	cmd.Stdout = cctx.CommandContext.Stdout
-	cmd.Stderr = cctx.CommandContext.Stderr
-
-	cgoInt := 0
+	cgoStr := "0"
 
 	if c.cgo {
-		cgoInt = 1
+		cgoStr = "1"
 	}
 
-	cmd.Env = append(
-		os.Environ(),
-		fmt.Sprintf("GOOS=%s", b.OS),
-		fmt.Sprintf("GOARCH=%s", b.Arch),
-		fmt.Sprintf("CGO_ENABLED=%d", cgoInt),
+	err = c.executor.Exec(
+		ctx,
+		executil.Command{
+			Cmd: c.path,
+			Args: []string{
+				"build",
+				"-ldflags",
+				strings.Join(ldFlags, " "),
+				"-o",
+				filepath.Join(c.distDir, t),
+				"./" + b.Path,
+			},
+
+			Stdout: cctx.CommandContext.Stdout,
+			Stderr: cctx.CommandContext.Stderr,
+			Env: map[string]string{
+				"GOOS":        b.OS,
+				"GOARCH":      b.Arch,
+				"CGO_ENABLED": cgoStr,
+			},
+		},
 	)
 
 	if err == nil {
 		cctx.Logger.Noticef("Finished compiling %s", filepath.Join(c.distDir, t))
 	}
 
-	return cmd.Run()
+	return err
 }
 
 func main() {
