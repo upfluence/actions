@@ -31,7 +31,7 @@ inputs:
   additional-tags:
     description: 'additional tags'
     required: false
-    default: ''
+    default: '""'
   registries:
     description: '[CSV] list of registries to push to'
     required: false
