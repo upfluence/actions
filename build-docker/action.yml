@@ -1,0 +1,63 @@
+name: 'build docker container'
+description: ''
+inputs:
+  dockerfile-paths:
+    description: '[CSV] dist directory'
+    required: false
+    default: 'Dockerfile'
+  version:
+    description: 'target version'
+    required: true
+  arg-mode:
+    description: 'arg mode to pass build info, valid values: app,none'
+    required: false
+    default: 'app'
+  additional-args:
+    description: 'additional args values, i.e. foo=bar,biz=buz'
+    required: false
+    default: ''
+  os:
+    description: 'to be filled in the platform'
+    required: false
+    default: 'linux'
+  arch:
+    description: 'to be filled in the platform'
+    required: false
+    default: 'amd64'
+  tag-mode:
+    description: 'tag mode, valid values: app,none'
+    required: false
+    default: 'app'
+  additional-tags:
+    description: 'additional tags'
+    required: false
+    default: ''
+  registries:
+    description: '[CSV] list of registries to push to'
+    required: false
+    default: 'index.docker.io'
+  github-token:
+    required: false
+    description: 'github token to be used'
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+    - run: |
+        [ ! -f "~/go/bin/build-docker" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/build-docker > ~/go/bin/build-docker
+      shell: bash
+    - run: chmod +x ~/go/bin/build-docker
+      shell: bash
+    - run: |
+        ~/go/bin/build-docker --dockerfile-paths ${{ inputs.dockerfile-paths }} \
+                              --release-version ${{ inputs.version }} \
+                              --arg-mode ${{ inputs.arg-mode }} \
+                              --additional-args '${{ inputs.additional-args }}' \
+                              --os ${{ inputs.os }} --arch ${{ inputs.arch }} \
+                              --tag-mode ${{ inputs.tag-mode }} \
+                              --additional-tags '${{ inputs.additional-tags }}' \
+                              --registries ${{ inputs.registries }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}

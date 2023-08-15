@@ -185,6 +185,7 @@ type CommandContext struct {
 	Repository string
 
 	Client *github.Client
+	Token  string
 }
 
 func (cc CommandContext) SplittedRepository() (string, string) {
@@ -223,6 +224,7 @@ func newCommandContext(cctx cli.CommandContext, lc localConfig) CommandContext {
 				),
 			),
 		),
+		Token: lc.Token,
 	}
 }
 
