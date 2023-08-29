@@ -38,7 +38,7 @@ inputs:
 outputs:
   definitions:
     description: 'definitions'
-    value: ${{ steps.compile-go.definitions }}
+    value: ${{ steps.compile-go.outputs.definitions }}
 
 runs:
   using: 'composite'

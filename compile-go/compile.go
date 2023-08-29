@@ -273,8 +273,6 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 		return "", "", err
 	}
 
-	cctx.Logger.Noticef("Finished compiling %s", filepath.Join(c.distDir, t))
-
 	f, err := os.Open(filename)
 
 	if err != nil {
@@ -284,7 +282,15 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 	h := sha256.New()
 	_, err = io.Copy(h, f)
 
-	return t, hex.EncodeToString(h.Sum(nil)), errors.Wrap(err, "cant hash the file")
+	sum := hex.EncodeToString(h.Sum(nil))
+
+	cctx.Logger.Noticef(
+		"Finished compiling %s (checksum: %s)",
+		filepath.Join(c.distDir, t),
+		sum,
+	)
+
+	return t, sum, errors.Wrap(err, "cant hash the file")
 }
 
 type definition struct {
@@ -333,6 +339,8 @@ func main() {
 			if err != nil {
 				return err
 			}
+
+			cctx.Logger.Noticef("Binary definitions: %s", string(buf))
 
 			return cctx.Output.WriteKeyValue("definitions", string(buf))
 		},
