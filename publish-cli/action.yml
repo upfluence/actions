@@ -23,6 +23,10 @@ inputs:
   definitions:
     description: 'definitions'
     required: true
+  github-token:
+    required: false
+    description: 'github token to be used'
+    default: ${{ github.token }}
 
 runs:
   using: 'composite'
@@ -36,3 +40,4 @@ runs:
       shell: bash
       env:
         DEFINITIONS: ${{ inputs.definitions }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}

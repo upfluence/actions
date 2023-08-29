@@ -17,6 +17,10 @@ inputs:
     description: 'path to the template'
     required: false
     default: 'template/formula.rb.template'
+  github-token:
+    required: false
+    description: 'github token to be used'
+    default: ${{ github.token }}
 
 runs:
   using: 'composite'
@@ -30,3 +34,4 @@ runs:
       shell: bash
       env:
         BINARIES: ${{ inputs.binaries }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
