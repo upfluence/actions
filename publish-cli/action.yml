@@ -1,0 +1,38 @@
+name: 'publish cli'
+description: ''
+inputs:
+  homebrew-tap:
+    description: 'homebrew tap'
+    required: false
+    default: 'upfluence/tap'
+  workflow-filename:
+    description: 'workflow filename'
+    required: false
+    default: '.github/workflows/homebrew-formula-update.yml'
+  template:
+    description: 'template'
+    required: false
+    default: 'template/formula.rb.template'
+  target-ref:
+    description: 'target ref'
+    required: false
+    default: 'main'
+  version:
+    description: 'target version'
+    required: true
+  definitions:
+    description: 'definitions'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - run: |
+        [ ! -f "~/go/bin/publish-cli" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/publish-cli > ~/go/bin/publish-cli
+      shell: bash
+    - run: chmod +x ~/go/bin/publish-cli
+      shell: bash
+    - run: ~/go/bin/publish-cli --release-version ${{ inputs.version }} --homebrew-tap ${{ inputs.homebrew-tap }} --workflow-filename ${{ inputs.workflow-filename }} --template ${{ inputs.template }} --target-ref ${{ inputs.target-ref }}
+      shell: bash
+      env:
+        DEFINITIONS: ${{ inputs.definitions }}
