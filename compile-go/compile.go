@@ -3,7 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -89,6 +94,8 @@ type build struct {
 	OS      string
 	Arch    string
 }
+
+func (b build) archKey() string { return fmt.Sprintf("%s/%s", b.OS, b.Arch) }
 
 func (b build) Name() string {
 	return filepath.Base(b.Path)
@@ -218,11 +225,11 @@ func newCompiler(c config, cctx toolkit.CommandContext) (*compiler, error) {
 	}, nil
 }
 
-func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandContext) error {
+func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandContext) (string, string, error) {
 	t, err := c.nt.render(b)
 
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	ldFlags := []string{"-s"}
@@ -237,6 +244,8 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 		cgoStr = "1"
 	}
 
+	filename := filepath.Join(c.distDir, t)
+
 	err = c.executor.Exec(
 		ctx,
 		executil.Command{
@@ -246,7 +255,7 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 				"-ldflags",
 				strings.Join(ldFlags, " "),
 				"-o",
-				filepath.Join(c.distDir, t),
+				filename,
 				"./" + b.Path,
 			},
 
@@ -260,11 +269,27 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 		},
 	)
 
-	if err == nil {
-		cctx.Logger.Noticef("Finished compiling %s", filepath.Join(c.distDir, t))
+	if err != nil {
+		return "", "", err
 	}
 
-	return err
+	cctx.Logger.Noticef("Finished compiling %s", filepath.Join(c.distDir, t))
+
+	f, err := os.Open(filename)
+
+	if err != nil {
+		return "", "", errors.Wrapf(err, "cant open %q", filename)
+	}
+
+	h := sha256.New()
+	_, err = io.Copy(h, f)
+
+	return t, hex.EncodeToString(h.Sum(nil)), errors.Wrap(err, "cant hash the file")
+}
+
+type definition struct {
+	Filename string `json:"filename"`
+	Sha256   string `json:"sha256"`
 }
 
 func main() {
@@ -283,13 +308,33 @@ func main() {
 				return err
 			}
 
+			defs := make(map[string]map[string]definition)
+
 			for _, b := range bs {
-				if err := cp.execute(ctx, b, cctx); err != nil {
+				fname, sha256Sum, err := cp.execute(ctx, b, cctx)
+
+				if err != nil {
 					return err
+				}
+				n := b.Name()
+
+				if defs[n] == nil {
+					defs[n] = make(map[string]definition, 1)
+				}
+
+				defs[n][b.archKey()] = definition{
+					Filename: fname,
+					Sha256:   sha256Sum,
 				}
 			}
 
-			return nil
+			buf, err := json.Marshal(defs)
+
+			if err != nil {
+				return err
+			}
+
+			return cctx.Output.WriteKeyValue("definitions", string(buf))
 		},
 		toolkit.WithDefaultConfig(defaultConfig),
 	).Run(context.Background())

@@ -35,6 +35,10 @@ inputs:
     description: 'Go template of the executable'
     required: false
     default: '{{ .Name }}'
+outputs:
+  definitions:
+    description: 'definitions'
+    value: ${{ steps.compile-go.definitions }}
 
 runs:
   using: 'composite'
@@ -46,5 +50,6 @@ runs:
       shell: bash
     - run: mkdir -p ${{ inputs.dist-dir }}
       shell: bash
-    - run: ~/go/bin/compile-go --executable-paths ${{ inputs.executable-paths }} --release-version ${{ inputs.version }} --dist-dir '${{ inputs.dist-dir }}' --oss ${{ inputs.os }} --archs ${{ inputs.arch }} --cgo ${{ inputs.cgo }} --linker-mode ${{ inputs.linker-mode }} --additional-links '${{ inputs.additional-links }}' --name-template '${{ inputs.name-template }}'
+    - id: compile-go
+      run: ~/go/bin/compile-go --executable-paths ${{ inputs.executable-paths }} --release-version ${{ inputs.version }} --dist-dir '${{ inputs.dist-dir }}' --oss ${{ inputs.os }} --archs ${{ inputs.arch }} --cgo ${{ inputs.cgo }} --linker-mode ${{ inputs.linker-mode }} --additional-links '${{ inputs.additional-links }}' --name-template '${{ inputs.name-template }}'
       shell: bash
