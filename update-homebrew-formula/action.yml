@@ -1,0 +1,32 @@
+name: 'update homebrew formula'
+description: ''
+inputs:
+  repository:
+    description: 'target repository'
+    required: true
+  cli-name:
+    description: 'cli name'
+    required: true
+  version:
+    description: 'version'
+    required: true
+  binaries:
+    description: 'binaries def [JSON formatted]'
+    required: true
+  template:
+    description: 'path to the template'
+    required: false
+    default: 'template/formula.rb.template'
+
+runs:
+  using: 'composite'
+  steps:
+    - run: |
+        [ ! -f "~/go/bin/update-homebrew-formula" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/update-homebrew-formula > ~/go/bin/update-homebrew-formula
+      shell: bash
+    - run: chmod +x ~/go/bin/update-homebrew-formula
+      shell: bash
+    - run: ~/go/bin/update-homebrew-formula --release-version ${{ inputs.version }} --cli-name ${{ inputs.cli-name }} --repository ${{ inputs.repository }} --template ${{ inputs.template }}
+      shell: bash
+      env:
+        BINARIES: ${{ inputs.binaries }}

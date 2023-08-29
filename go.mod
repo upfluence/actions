@@ -10,6 +10,7 @@ require (
 	github.com/upfluence/errors v0.2.4
 	github.com/upfluence/log v0.0.5
 	golang.org/x/oauth2 v0.10.0
+	golang.org/x/text v0.11.0
 )
 
 require (
