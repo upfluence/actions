@@ -14,24 +14,20 @@ import (
 
 var defaultConfig = config{
 	HomebrewTap:      "upfluence/tap",
-	WorkflowFilename: ".github/workflows/homebrew-formula-update.yml",
+	WorkflowFilename: "homebrew-formula-update.yml",
 	Template:         "template/formula.rb.template",
 	TargetRef:        "main",
 }
 
 type definitions map[string]map[string]any
 
-func (ds *definitions) Parse(v string) error {
-	return json.Unmarshal([]byte(v), ds)
-}
-
 type config struct {
-	Version          string      `flag:"release-version"`
-	HomebrewTap      string      `flag:"homebrew-tap"`
-	WorkflowFilename string      `flag:"workflow-filename"`
-	TargetRef        string      `flag:"target-ref"`
-	Template         string      `flag:"template"`
-	Definitions      definitions `env:"DEFINITIONS"`
+	Version          string `flag:"release-version"`
+	HomebrewTap      string `flag:"homebrew-tap"`
+	WorkflowFilename string `flag:"workflow-filename"`
+	TargetRef        string `flag:"target-ref"`
+	Template         string `flag:"template"`
+	Definitions      string `env:"DEFINITIONS"`
 }
 
 func (c config) targetRepo() (string, string) {
@@ -50,7 +46,11 @@ func main() {
 		func(ctx context.Context, cctx toolkit.CommandContext, c config) error {
 			org, repo := c.targetRepo()
 
-			for k, def := range c.Definitions {
+			var defs definitions
+
+			json.Unmarshal([]byte(c.Definitions), &defs)
+
+			for k, def := range defs {
 				buf, err := json.Marshal(def)
 
 				if err != nil {
