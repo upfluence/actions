@@ -58,6 +58,42 @@ func main() {
 
 			fname := fmt.Sprintf("Formula/%s.rb", c.CLIName)
 
+			commits, _, err := cctx.Client.Repositories.ListCommits(
+				ctx,
+				org,
+				repo,
+				&github.CommitsListOptions{Path: fname},
+			)
+
+			if err != nil {
+				return err
+			}
+
+			var sha *string
+
+			if len(commits) > 0 {
+				commit := commits[0]
+
+				t, _, err := cctx.Client.Git.GetTree(
+					ctx,
+					org,
+					repo,
+					commit.GetSHA(),
+					true,
+				)
+
+				if err != nil {
+					return err
+				}
+
+				for _, entry := range t.Entries {
+					if *entry.Path == fname {
+						sha = entry.SHA
+						break
+					}
+				}
+			}
+
 			_, _, err = cctx.Client.Repositories.UpdateFile(
 				ctx,
 				org,
@@ -67,6 +103,7 @@ func main() {
 					Message: github.String(fmt.Sprintf("Update %s to v%s", c.CLIName, c.Version)),
 					Content: buf.Bytes(),
 					Branch:  &cctx.RefName,
+					SHA:     sha,
 				},
 			)
 
