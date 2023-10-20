@@ -32,7 +32,7 @@ runs:
   using: 'composite'
   steps:
     - run: |
-        [ ! -f "~/go/bin/publish-cli" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/publish-cli > ~/go/bin/publish-cli
+        [ ! -f "~/go/bin/publish-cli" ] && mkdir -p ~/go/bin && curl -L https://github.com/upfluence/actions/releases/latest/download/publish-cli > ~/go/bin/publish-cli
       shell: bash
     - run: chmod +x ~/go/bin/publish-cli
       shell: bash

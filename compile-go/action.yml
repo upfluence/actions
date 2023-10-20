@@ -44,7 +44,7 @@ runs:
   using: 'composite'
   steps:
     - run: |
-        [ ! -f "~/go/bin/compile-go" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/compile-go > ~/go/bin/compile-go
+        [ ! -f "~/go/bin/compile-go" ] && mkdir -p ~/go/bin && curl -L https://github.com/upfluence/actions/releases/latest/download/compile-go > ~/go/bin/compile-go
       shell: bash
     - run: chmod +x ~/go/bin/compile-go
       shell: bash
