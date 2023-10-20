@@ -1,0 +1,24 @@
+name: lib-any-release
+
+on:
+  workflow_call:
+    inputs:
+      timeout-minutes:
+        required: false
+        type: number
+        default: 10
+
+jobs:
+  release:
+    runs-on: ubuntu-20.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Bump version
+        id: bump-version
+        uses: upfluence/actions/bump-version@master
+      - name: Create release
+        uses: upfluence/actions/create-github-release@master
+        with:
+          version: ${{ steps.bump-version.outputs.version }}
