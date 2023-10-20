@@ -21,7 +21,7 @@ runs:
   using: 'composite'
   steps:
     - run: |
-        [ ! -f "~/go/bin/bump-version" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/bump-version > ~/go/bin/bump-version
+        [ ! -f "~/go/bin/bump-version" ] && mkdir -p ~/go/bin && curl -L https://github.com/upfluence/actions/releases/latest/download/bump-version > ~/go/bin/bump-version
       shell: bash
     - run: chmod +x ~/go/bin/bump-version
       shell: bash

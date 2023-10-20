@@ -26,7 +26,7 @@ runs:
   using: 'composite'
   steps:
     - run: |
-        [ ! -f "~/go/bin/update-homebrew-formula" ] && curl -L https://github.com/upfluence/actions/releases/latest/download/update-homebrew-formula > ~/go/bin/update-homebrew-formula
+        [ ! -f "~/go/bin/update-homebrew-formula" ] && mkdir -p ~/go/bin && curl -L https://github.com/upfluence/actions/releases/latest/download/update-homebrew-formula > ~/go/bin/update-homebrew-formula
       shell: bash
     - run: chmod +x ~/go/bin/update-homebrew-formula
       shell: bash
