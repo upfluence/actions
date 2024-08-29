@@ -101,6 +101,16 @@ type config struct {
 	AdditionalTags []string `flag:"additional-tags"`
 
 	SkipPush bool `flag:"skip-push"`
+
+	OverrideRepositories map[string]string `flag:"override-repositories"`
+}
+
+func (c *config) repository(n string) string {
+	if r, ok := c.OverrideRepositories[n]; ok {
+		return r
+	}
+
+	return n
 }
 
 func (c *config) platform() string {
@@ -159,7 +169,7 @@ func (c *config) builds(cctx toolkit.CommandContext) ([]build, error) {
 			bs = append(
 				bs,
 				build{
-					name:       name,
+					name:       c.repository(name),
 					dockerfile: fname,
 					platform:   platform,
 					commit:     cctx.Sha[:7],
