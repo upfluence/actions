@@ -4,7 +4,7 @@ inputs:
   tools:
     description: '[CSV] tools to check'
     required: false
-    default: ''
+    default: 'gh-downloader,ubuild,gh-actions-go-mod,gh-actions-aws,build-docker,bump-version,compile-go,create-github-release,publish-cli,update-homebrew-formula'
 outputs:
   installed-tools:
     description: 'maps tool name to whether or not it is installed'
