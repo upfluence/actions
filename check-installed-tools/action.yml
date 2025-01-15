@@ -1,0 +1,27 @@
+name: 'Check installed tools'
+description: 'Check if given Upfluence tools are installed, symlink them if they are'
+inputs:
+  tools:
+    description: '[CSV] tools to check'
+    required: false
+    default: ''
+outputs:
+  installed-tools:
+    description: 'maps tool name to whether or not it is installed'
+    value: ${{ steps.check-installed.outputs }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: check-installed
+      shell: bash
+      run: |
+        for tool in ${${{ inputs.tools }}//,/ }
+        do
+          if [ -f /usr/bin/$tool ]; then
+            ln -s /usr/bin/$tool ~/go/bin/$tool
+            echo "$tool=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$tool=false" >> "$GITHUB_OUTPUT"
+          fi
+        done

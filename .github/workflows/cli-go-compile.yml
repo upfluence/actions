@@ -1,0 +1,63 @@
+name: cli-go-compile
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        required: false
+        type: string
+        default: '1.23.x'
+      executable-paths:
+        required: true
+        type: string
+      timeout-minutes:
+        required: false
+        type: number
+        default: 10
+
+jobs:
+  compile:
+    runs-on: ubuntu-20.04
+    if: contains('refs/heads/master', github.ref)
+    steps:
+      - name: Setup Go (Upfluence)
+        uses: upfluence/action-setup-go@master
+        with:
+          go-version: ${{ inputs.go-version }}
+          setup-go-cache: false
+          pat-token: ${{ secrets.PAT_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Restore cached modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Bump version
+        id: bump-version
+        uses: upfluence/actions/bump-version@master
+      - id: compile-user-cli
+        name: Compile CLI binaries
+        uses: upfluence/actions/compile-go@master
+        with:
+          executable-paths: ${{ inputs.executable-paths }}
+          dist-dir: dist/
+          linker-mode: cli
+          version: ${{ steps.bump-version.outputs.version }}
+          os: linux,darwin
+          arch: amd64,arm64
+          name-template: '{{ .Name }}-{{ .OS }}-{{ .Arch }}-{{ .Version }}'
+      - name: Create release
+        uses: upfluence/actions/create-github-release@master
+        with:
+          attachments: dist/*
+          version: ${{ steps.bump-version.outputs.version }}
+      - name: Publish clis
+        uses: upfluence/actions/publish-cli@master
+        with:
+          homebrew-tap: upfluence/private-tap
+          version: ${{ steps.bump-version.outputs.version }}
+          definitions: ${{ steps.compile-user-cli.outputs.definitions }}
+          github-token: ${{ secrets.PAT_TOKEN }}
