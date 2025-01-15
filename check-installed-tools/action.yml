@@ -1,8 +1,8 @@
 name: 'Check installed tools'
 description: 'Check if given Upfluence tools are installed, symlink them if they are'
 inputs:
-  tools-matrix:
-    description: '[JSON string array] tools to check'
+  tools:
+    description: '[CSV] tools to check'
     required: false
     default: 'gh-downloader,ubuild,gh-actions-go-mod,gh-actions-aws,build-docker,bump-version,compile-go,create-github-release,publish-cli,update-homebrew-formula'
 outputs:
