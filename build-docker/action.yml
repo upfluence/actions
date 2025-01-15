@@ -38,7 +38,7 @@ inputs:
     default: 'index.docker.io'
   override-repositories:
     description: 'rewrite repository name'
-    reqired: false
+    required: false
     default: ''
   github-token:
     required: false
