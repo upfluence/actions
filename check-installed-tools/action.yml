@@ -6,9 +6,36 @@ inputs:
     required: false
     default: 'gh-downloader,ubuild,gh-actions-go-mod,gh-actions-aws,build-docker,bump-version,compile-go,create-github-release,publish-cli,update-homebrew-formula'
 outputs:
-  installed-tools:
-    description: 'maps tool name to whether or not it is installed'
-    value: ${{ steps.check-installed.outputs }}
+  gh-downloader:
+    description: 'gh-downloader is installed'
+    value: ${{ steps.check-installed.outputs.gh-downloader }}
+  ubuild:
+    description: 'ubuild is installed'
+    value: ${{ steps.check-installed.outputs.ubuild }}
+  gh-actions-go-mod:
+    description: 'gh-actions-go-mod is installed'
+    value: ${{ steps.check-installed.outputs.gh-actions-go-mod }}
+  gh-actions-aws:
+    description: 'gh-actions-aws is installed'
+    value: ${{ steps.check-installed.outputs.gh-actions-aws }}
+  build-docker:
+    description: 'build-docker is installed'
+    value: ${{ steps.check-installed.outputs.build-docker }}
+  bump-version:
+    description: 'bump-version is installed'
+    value: ${{ steps.check-installed.outputs.bump-version }}
+  compile-go:
+    description: 'compile-go is installed'
+    value: ${{ steps.check-installed.outputs.compile-go }}
+  create-github-release:
+    description: 'create-github-release is installed'
+    value: ${{ steps.check-installed.outputs.create-github-release }}
+  publish-cli:
+    description: 'publish-cli is installed'
+    value: ${{ steps.check-installed.outputs.publish-cli }}
+  update-homebrew-formula:
+    description: 'update-homebrew-formula is installed'
+    value: ${{ steps.check-installed.outputs.update-homebrew-formula }}
 
 runs:
   using: 'composite'
