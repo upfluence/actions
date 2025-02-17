@@ -35,6 +35,10 @@ inputs:
     description: 'Go template of the executable'
     required: false
     default: '{{ .Name }}'
+  compiler-tags:
+    description: '[CSV] List of build tags to pass to go build'
+    required: false
+    default: ''
 outputs:
   definitions:
     description: 'definitions'
@@ -51,5 +55,5 @@ runs:
     - run: mkdir -p ${{ inputs.dist-dir }}
       shell: bash
     - id: compile-go
-      run: ~/go/bin/compile-go --executable-paths ${{ inputs.executable-paths }} --release-version ${{ inputs.version }} --dist-dir '${{ inputs.dist-dir }}' --oss ${{ inputs.os }} --archs ${{ inputs.arch }} --cgo ${{ inputs.cgo }} --linker-mode ${{ inputs.linker-mode }} --additional-links '${{ inputs.additional-links }}' --name-template '${{ inputs.name-template }}'
+      run: ~/go/bin/compile-go --executable-paths ${{ inputs.executable-paths }} --release-version ${{ inputs.version }} --dist-dir '${{ inputs.dist-dir }}' --oss ${{ inputs.os }} --archs ${{ inputs.arch }} --cgo ${{ inputs.cgo }} --linker-mode ${{ inputs.linker-mode }} --additional-links '${{ inputs.additional-links }}' --name-template '${{ inputs.name-template }}' --compiler-tags '${{ inputs.compiler-tags }}'
       shell: bash
