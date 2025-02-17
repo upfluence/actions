@@ -120,9 +120,10 @@ type config struct {
 	AdditionalLinks map[string]string `flag:"additional-links"`
 	CompilerPath    string            `flag:"compiler-path"`
 	NameTemplate    nameTemplate      `flag:"name-template"`
+	CompilerTags    []string          `flag:"compiler-tags"`
 }
 
-func (c config) executablePaths(cctx toolkit.CommandContext) ([]string, error) {
+func (c config) executablePaths(_ toolkit.CommandContext) ([]string, error) {
 	var paths []string
 
 	for _, exc := range c.ExecutablePaths {
@@ -200,7 +201,8 @@ type compiler struct {
 	distDir string
 	cgo     bool
 
-	links map[string]string
+	links        map[string]string
+	compilerTags []string
 
 	nt nameTemplate
 
@@ -215,13 +217,14 @@ func newCompiler(c config, cctx toolkit.CommandContext) (*compiler, error) {
 	}
 
 	return &compiler{
-		path:     p,
-		executor: c.executor(cctx.Logger),
-		distDir:  c.DistDir,
-		cgo:      c.CGo,
-		links:    c.links(cctx),
-		nt:       c.NameTemplate,
-		repo:     cctx.Repository,
+		path:         p,
+		executor:     c.executor(cctx.Logger),
+		distDir:      c.DistDir,
+		cgo:          c.CGo,
+		links:        c.links(cctx),
+		compilerTags: c.CompilerTags,
+		nt:           c.NameTemplate,
+		repo:         cctx.Repository,
 	}, nil
 }
 
@@ -233,9 +236,14 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 	}
 
 	ldFlags := []string{"-s"}
+	formattedTags := ""
 
 	for k, v := range c.links {
 		ldFlags = append(ldFlags, fmt.Sprintf("-X %s=%s", k, v))
+	}
+
+	if len(c.compilerTags) > 0 {
+		formattedTags = fmt.Sprintf("-tags=\"%s\"", strings.Join(c.compilerTags, " "))
 	}
 
 	cgoStr := "0"
@@ -254,6 +262,7 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 				"build",
 				"-ldflags",
 				strings.Join(ldFlags, " "),
+				formattedTags,
 				"-o",
 				filename,
 				"./" + b.Path,

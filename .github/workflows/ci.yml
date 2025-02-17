@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: Run Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Install Go
         uses: actions/setup-go@v3
@@ -28,7 +28,7 @@ jobs:
         run: go test -v ./...
   release:
     name: Release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: test
     permissions:
       contents: write
