@@ -29,6 +29,7 @@ var (
 		"master":  bumpPatch,
 		"main":    bumpPatch,
 		"staging": bumpRC,
+		"qa":      bumpRC,
 	}
 )
 
