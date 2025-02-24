@@ -22,6 +22,22 @@ func parse(t string) (*version, error) {
 	return &version{Version: *v}, nil
 }
 
+func (v *version) Pre() int64 {
+	r := v.Metadata()
+
+	if r == "" {
+		return 0
+	}
+
+	res, err := strconv.Atoi(strings.TrimPrefix(r, "pre"))
+
+	if err != nil {
+		return 0
+	}
+
+	return int64(res)
+}
+
 func (v *version) RC() int64 {
 	r := v.Prerelease()
 
@@ -67,12 +83,23 @@ func (v *version) IncPatch() {
 	v.Version = v.Version.IncPatch()
 }
 
+func (v *version) IncPre() {
+	pre := v.Pre()
+
+	if pre == 0 {
+		v.IncRC()
+	}
+
+	v.Version, _ = v.SetMetadata(fmt.Sprintf("pre%d", pre+1))
+}
+
 func (v *version) IncRC() {
 	if v.RC() == 0 {
 		v.IncPatch()
 	}
 
 	v.Version, _ = v.SetPrerelease(fmt.Sprintf("rc%d", v.RC()+1))
+	v.Version, _ = v.SetMetadata("")
 }
 
 func incrementVersionFromCommits(v *version, messages []string) bool {
