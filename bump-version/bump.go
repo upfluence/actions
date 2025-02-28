@@ -15,6 +15,7 @@ const (
 	bumpPatch
 	bumpMinor
 	bumpMajor
+	bumpPre
 )
 
 var (
@@ -23,12 +24,13 @@ var (
 		"bump_patch": bumpPatch,
 		"bump_minor": bumpMinor,
 		"bump_major": bumpMajor,
+		"bump_pre":   bumpPre,
 	}
 
 	defaultStrategyByBranch = map[string]strategy{
 		"master":  bumpPatch,
 		"main":    bumpPatch,
-		"staging": bumpRC,
+		"staging": bumpPre,
 		"qa":      bumpRC,
 	}
 )
@@ -56,6 +58,8 @@ func (s strategy) inc(v *version) {
 		v.IncMinor()
 	case bumpMajor:
 		v.IncMajor()
+	case bumpPre:
+		v.IncPre()
 	}
 }
 
