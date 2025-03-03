@@ -13,7 +13,7 @@ type version struct {
 }
 
 func parse(t string) (*version, error) {
-	v, err := semver.NewVersion(strings.Replace(t, "_", "+", -1))
+	v, err := semver.NewVersion(strings.ReplaceAll(t, "_", "+"))
 
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (v *version) RC() int64 {
 }
 
 func (v *version) String() string {
-	return strings.Replace(fmt.Sprintf("v%s", v.Version.String()), "+", "_", -1)
+	return strings.ReplaceAll(fmt.Sprintf("v%s", v.Version.String()), "+", "_")
 }
 
 func (v *version) Compare(v2 *version) int {
