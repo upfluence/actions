@@ -22,15 +22,15 @@ func TestStrategy(t *testing.T) {
 		{
 			have:     "v0.0.0",
 			strategy: bumpPre,
-			want:     "v0.0.1-rc1+pre1",
+			want:     "v0.0.1-rc1_pre1",
 		},
 		{
-			have:     "v0.0.1-rc1+pre1",
+			have:     "v0.0.1-rc1_pre1",
 			strategy: bumpRC,
 			want:     "v0.0.1-rc2",
 		},
 		{
-			have:     "v0.0.1-rc1+pre1",
+			have:     "v0.0.1-rc1_pre1",
 			strategy: bumpMajor,
 			want:     "v1.0.0",
 		},
