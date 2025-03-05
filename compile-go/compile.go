@@ -243,7 +243,7 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 	}
 
 	if len(c.compilerTags) > 0 {
-		formattedTags = fmt.Sprintf("-tags=\"%s\"", strings.Join(c.compilerTags, " "))
+		formattedTags = fmt.Sprintf("-tags='%s'", strings.Join(c.compilerTags, " "))
 	}
 
 	cgoStr := "0"
