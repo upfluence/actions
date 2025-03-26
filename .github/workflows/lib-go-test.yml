@@ -1,0 +1,58 @@
+name: lib-go-test
+
+on:
+  workflow_call:
+    inputs:
+      go-version-matrix:
+        required: false
+        type: string
+        default: "['1.24.x', '1.23.x', '1.22.x']"
+      with-postgres:
+        required: false
+        type: boolean
+        default: false
+      timeout-minutes:
+        required: false
+        type: number
+        default: 10
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: ${{ fromJSON(inputs.go-version-matrix) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    services:
+      postgres:
+        image: ${{ inputs.with-postgres && 'postgres' || '' }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Setup Go (Upfluence)
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Cache Modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Run tests
+        run: go test -p 1 -v -coverprofile=./coverage.out  ./...
+        env:
+          POSTGRES_URL: ${{ inputs.with-postgres && 'postgres://postgres:postgres@localhost:5432/test?sslmode=disable' || '' }}
