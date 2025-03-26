@@ -11,6 +11,14 @@ on:
         required: false
         type: boolean
         default: false
+      with-cassandra:
+        required: false
+        type: boolean
+        default: false
+      with-redis:
+        required: false
+        type: boolean
+        default: false
       timeout-minutes:
         required: false
         type: number
@@ -37,6 +45,27 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      cassandra:
+        image: ${{ inputs.with-cassandra && 'upfluence/cassandra' || '' }}
+        env:
+          CASSANDRA_CLUSTER_NAME: "dev-env"
+          LOCAL_ENV: true
+        options: >-
+          --health-cmd "nc -z 127.0.0.1 7199"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 9042:9042
+      redis:
+        image: ${{ inputs.with-redis && 'redis' || '' }}
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
       - name: Setup Go (Upfluence)
@@ -56,3 +85,5 @@ jobs:
         run: go test -p 1 -v -coverprofile=./coverage.out  ./...
         env:
           POSTGRES_URL: ${{ inputs.with-postgres && 'postgres://postgres:postgres@localhost:5432/test?sslmode=disable' || '' }}
+          CASSANDRA_KEYSPACE: ${{ inputs.with-cassandra && 'test' || '' }}
+          REDIS_URL: ${{ inputs.with-redis && 'redis://127.0.0.1:6379' || '' }}
