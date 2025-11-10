@@ -4,17 +4,23 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/google/go-github/v53/github"
 	"github.com/upfluence/errors"
+	"github.com/upfluence/pkg/backoff"
+	"github.com/upfluence/pkg/backoff/exponential"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
 	"github.com/upfluence/actions/pkg/toolkit"
 )
+
+var backoffStrategy = backoff.LimitStrategy(exponential.NewDefaultBackoff(time.Second, 15*time.Second), 5)
 
 type config struct {
 	Version    string `flag:"release-version"`
@@ -58,56 +64,80 @@ func main() {
 
 			fname := fmt.Sprintf("Formula/%s.rb", c.CLIName)
 
-			commits, _, err := cctx.Client.Repositories.ListCommits(
-				ctx,
-				org,
-				repo,
-				&github.CommitsListOptions{Path: fname},
-			)
+			i := 0
 
-			if err != nil {
-				return err
-			}
-
-			var sha *string
-
-			if len(commits) > 0 {
-				commit := commits[0]
-
-				t, _, err := cctx.Client.Git.GetTree(
+			for {
+				commits, _, err := cctx.Client.Repositories.ListCommits(
 					ctx,
 					org,
 					repo,
-					commit.GetSHA(),
-					true,
+					&github.CommitsListOptions{Path: fname},
 				)
 
 				if err != nil {
 					return err
 				}
 
-				for _, entry := range t.Entries {
-					if *entry.Path == fname {
-						sha = entry.SHA
-						break
+				var sha *string
+
+				if len(commits) > 0 {
+					commit := commits[0]
+
+					t, _, err := cctx.Client.Git.GetTree(
+						ctx,
+						org,
+						repo,
+						commit.GetSHA(),
+						true,
+					)
+
+					if err != nil {
+						return err
+					}
+
+					for _, entry := range t.Entries {
+						if *entry.Path == fname {
+							sha = entry.SHA
+							break
+						}
 					}
 				}
+				_, _, err = cctx.Client.Repositories.UpdateFile(
+					ctx,
+					org,
+					repo,
+					fname,
+					&github.RepositoryContentFileOptions{
+						Message: github.String(fmt.Sprintf("Update %s to v%s", c.CLIName, c.Version)),
+						Content: buf.Bytes(),
+						Branch:  &cctx.RefName,
+						SHA:     sha,
+					},
+				)
+
+				var ghErr *github.ErrorResponse
+
+				if err == nil || !errors.As(err, &ghErr) || ghErr.Response.StatusCode != http.StatusConflict {
+					return err
+				}
+
+				d, err := backoffStrategy.Backoff(i)
+
+				if err != nil {
+					return errors.Wrap(err, "backoff failed")
+				}
+
+				if d == backoff.Canceled {
+					return ghErr
+				}
+
+				select {
+				case <-ctx.Done():
+				case <-time.After(d):
+				}
+
+				i++
 			}
-
-			_, _, err = cctx.Client.Repositories.UpdateFile(
-				ctx,
-				org,
-				repo,
-				fname,
-				&github.RepositoryContentFileOptions{
-					Message: github.String(fmt.Sprintf("Update %s to v%s", c.CLIName, c.Version)),
-					Content: buf.Bytes(),
-					Branch:  &cctx.RefName,
-					SHA:     sha,
-				},
-			)
-
-			return err
 		},
 	).Run(context.Background())
 }
