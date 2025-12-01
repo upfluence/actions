@@ -250,6 +250,8 @@ func (c *compiler) execute(ctx context.Context, b build, cctx toolkit.CommandCon
 
 	if c.cgo {
 		cgoStr = "1"
+
+		ldFlags = append(ldFlags, "-extldflags \"-static\"")
 	}
 
 	filename := filepath.Join(c.distDir, t)
