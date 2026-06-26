@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/google/go-github/v53/github"
+	"github.com/upfluence/errors"
+
 	"github.com/upfluence/actions/pkg/toolkit"
 )
 
@@ -71,6 +73,22 @@ func fetchContext(ctx context.Context, cctx toolkit.CommandContext) (*version, [
 
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if commits.GetStatus() == "diverged" {
+		commit, _, err := cctx.Client.Repositories.GetCommit(
+			ctx,
+			org,
+			repo,
+			cctx.Sha,
+			nil,
+		)
+
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "get commit")
+		}
+
+		return tag, []string{commit.GetCommit().GetMessage()}, nil
 	}
 
 	var msgs []string
