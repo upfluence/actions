@@ -33,7 +33,7 @@ runs:
       shell: bash
     - run: chmod +x ~/go/bin/create-github-release
       shell: bash
-    - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments '${{ inputs.attachments }}' --make-latest '${{ inputs.latest }}'
+    - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments '${{ inputs.attachments }}'${{ inputs.latest != 'true' && ' --prerelease' || '' }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
