@@ -15,6 +15,7 @@ type config struct {
 	Version     string   `flag:"release-version"`
 	Attachments []string `flag:"attachments"`
 	Prerelease  bool     `flag:"prerelease"`
+	MakeLatest  string   `flag:"make-latest"`
 }
 
 func (c config) attachments(cctx toolkit.CommandContext) ([]string, error) {
@@ -74,6 +75,12 @@ func main() {
 				return err
 			}
 
+			var makeLatest *string
+
+			if c.MakeLatest != "" {
+				makeLatest = &c.MakeLatest
+			}
+
 			release, _, err := cctx.Client.Repositories.CreateRelease(
 				ctx,
 				org,
@@ -81,6 +88,7 @@ func main() {
 				&github.RepositoryRelease{
 					TagName:              &c.Version,
 					Prerelease:           &c.Prerelease,
+					MakeLatest:           makeLatest,
 					GenerateReleaseNotes: github.Bool(true),
 				},
 			)

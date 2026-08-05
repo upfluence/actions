@@ -8,6 +8,10 @@ inputs:
     description: '[CSV] attachments to uplaod to the release (accept globs)'
     required: false
     default: ''
+  latest:
+    description: 'mark the release as latest'
+    required: false
+    default: 'true'
   github-token:
     required: false
     description: 'github token to be used'
@@ -29,7 +33,7 @@ runs:
       shell: bash
     - run: chmod +x ~/go/bin/create-github-release
       shell: bash
-    - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments '${{ inputs.attachments }}'
+    - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments '${{ inputs.attachments }}' --make-latest '${{ inputs.latest }}'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
