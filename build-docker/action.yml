@@ -20,8 +20,8 @@ inputs:
     description: 'to be filled in the platform'
     required: false
     default: 'linux'
-  arch:
-    description: 'to be filled in the platform'
+  archs:
+    description: '[CSV] to be filled in the platform'
     required: false
     default: 'amd64'
   tag-mode:
@@ -48,6 +48,10 @@ inputs:
     required: false
     description: 'version of the cli to use'
     default: 'latest'
+  gha-cache:
+    description: 'enable GitHub Actions cache backend'
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -67,11 +71,14 @@ runs:
                               --release-version ${{ inputs.version }} \
                               --arg-mode ${{ inputs.arg-mode }} \
                               --additional-args '${{ inputs.additional-args }}' \
-                              --os ${{ inputs.os }} --arch ${{ inputs.arch }} \
+                              --os ${{ inputs.os }} --archs ${{ inputs.archs }} \
                               --tag-mode ${{ inputs.tag-mode }} \
                               --additional-tags '${{ inputs.additional-tags }}' \
                               --override-repositories '${{ inputs.override-repositories }}' \
-                              --registries ${{ inputs.registries }}
+                              --registries ${{ inputs.registries }} \
+                              --gha-cache ${{ inputs.gha-cache }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
+        ACTIONS_CACHE_URL: ${{ env.ACTIONS_CACHE_URL }}
+        ACTIONS_RUNTIME_TOKEN: ${{ env.ACTIONS_RUNTIME_TOKEN }}

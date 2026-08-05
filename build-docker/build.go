@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/upfluence/errors"
 	"github.com/upfluence/log"
@@ -16,7 +17,7 @@ import (
 var defaultConfig = config{
 	DockerfilePaths: []string{"Dockerfile"},
 	OS:              "linux",
-	Arch:            "amd64",
+	Archs:           []string{"amd64"},
 	Registries:      []string{"index.docker.io"},
 }
 
@@ -81,7 +82,7 @@ func (tm tagMode) tags(cctx toolkit.CommandContext, v string) []string {
 
 		return []string{v, upstream, cctx.Sha[:7]}
 	default:
-		return nil
+		return []string{cctx.Sha[:7]}
 	}
 }
 
@@ -94,13 +95,14 @@ type config struct {
 	ArgMode        argMode           `flag:"arg-mode"`
 	AdditionalArgs map[string]string `flag:"additional-args"`
 
-	OS   string `flag:"os"`
-	Arch string `flag:"arch"`
+	OS    string   `flag:"os"`
+	Archs []string `flag:"archs"`
 
 	TagMode        tagMode  `flag:"tag-mode"`
 	AdditionalTags []string `flag:"additional-tags"`
 
-	SkipPush bool `flag:"skip-push"`
+	SkipPush    bool `flag:"skip-push"`
+	UseGHACache bool `flag:"gha-cache"`
 
 	OverrideRepositories map[string]string `flag:"override-repositories"`
 }
@@ -114,7 +116,13 @@ func (c *config) repository(n string) string {
 }
 
 func (c *config) platform() string {
-	return fmt.Sprintf("%s/%s", c.OS, c.Arch)
+	var ps []string
+
+	for _, arch := range c.Archs {
+		ps = append(ps, fmt.Sprintf("%s/%s", c.OS, arch))
+	}
+
+	return strings.Join(ps, ",")
 }
 
 func (c *config) tags(cctx toolkit.CommandContext) []string {
@@ -172,7 +180,8 @@ func (c *config) builds(cctx toolkit.CommandContext) ([]build, error) {
 					name:       c.repository(name),
 					dockerfile: fname,
 					platform:   platform,
-					commit:     cctx.Sha[:7],
+					skipPush:   c.SkipPush,
+					ghaCache:   c.UseGHACache,
 					registries: c.Registries,
 					tags:       tags,
 					args:       args,
@@ -189,26 +198,36 @@ type build struct {
 	dockerfile string
 	args       map[string]string
 	platform   string
-	commit     string
+	skipPush   bool
+	ghaCache   bool
 
 	registries []string
 	tags       []string
 }
 
-func (b build) intermediateTag() string {
-	return fmt.Sprintf("%s:%s", b.name, b.commit)
-}
-
 func (b build) buildArgs() []string {
 	vs := []string{
+		"buildx",
 		"build",
 		"--pull",
 		"--file",
 		b.dockerfile,
-		"--tag",
-		b.intermediateTag(),
 		"--platform",
 		b.platform,
+	}
+
+	if !b.skipPush {
+		vs = append(vs, "--push")
+	}
+
+	if b.ghaCache {
+		vs = append(vs, "--cache-from", "type=gha", "--cache-to", "type=gha,mode=max")
+	}
+
+	for _, r := range b.registries {
+		for _, t := range b.tags {
+			vs = append(vs, "--tag", fmt.Sprintf("%s/%s:%s", r, b.name, t))
+		}
 	}
 
 	for k, v := range b.args {
@@ -216,43 +235,6 @@ func (b build) buildArgs() []string {
 	}
 
 	return append(vs, ".")
-}
-
-func (b build) tagArgs() [][]string {
-	var as [][]string
-
-	for _, r := range b.registries {
-		for _, t := range b.tags {
-			as = append(
-				as,
-				[]string{
-					"tag",
-					b.intermediateTag(),
-					fmt.Sprintf("%s/%s:%s", r, b.name, t),
-				},
-			)
-		}
-	}
-
-	return as
-}
-
-func (b build) pushArgs() [][]string {
-	var as [][]string
-
-	for _, r := range b.registries {
-		for _, t := range b.tags {
-			as = append(
-				as,
-				[]string{
-					"push",
-					fmt.Sprintf("%s/%s:%s", r, b.name, t),
-				},
-			)
-		}
-	}
-
-	return as
 }
 
 func main() {
@@ -285,20 +267,6 @@ func main() {
 			for _, b := range bs {
 				if err := exec(b.buildArgs()); err != nil {
 					return err
-				}
-
-				for _, args := range b.tagArgs() {
-					if err := exec(args); err != nil {
-						return err
-					}
-				}
-
-				if !c.SkipPush {
-					for _, args := range b.pushArgs() {
-						if err := exec(args); err != nil {
-							return err
-						}
-					}
 				}
 			}
 
