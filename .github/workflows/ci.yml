@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'master'
+      - 'dev'
   pull_request:
 
 jobs:
@@ -32,7 +33,7 @@ jobs:
     needs: test
     permissions:
       contents: write
-    if: contains('refs/heads/master', github.ref)
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev'
     steps:
       - name: Install Go
         uses: actions/setup-go@v3
@@ -50,6 +51,8 @@ jobs:
       - name: Bump version
         id: bump-version
         uses: ./bump-version
+        with:
+          strategies-by-branch: master=bump_minor,dev=bump_rc
       - name: Compile binaries
         uses: ./compile-go
         with:
@@ -62,3 +65,4 @@ jobs:
         with:
           attachments: dist/*
           version: ${{ steps.bump-version.outputs.version }}
+          latest: ${{ github.ref == 'refs/heads/master' }}
