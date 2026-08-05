@@ -13,6 +13,10 @@ inputs:
     required: false
     description: 'github token to be used'
     default: ${{ github.token }}
+  cli-version:
+    required: false
+    description: 'version of the cli to use'
+    default: 'latest'
 outputs:
   version:
     description: 'the target version'
@@ -21,7 +25,12 @@ runs:
   using: 'composite'
   steps:
     - run: |
-        [ ! -f "~/go/bin/bump-version" ] && mkdir -p ~/go/bin && curl -L https://github.com/upfluence/actions/releases/latest/download/bump-version > ~/go/bin/bump-version
+        mkdir -p ~/go/bin
+        if [ "${{ inputs.cli-version }}" = "latest" ]; then
+          curl -L https://github.com/upfluence/actions/releases/latest/download/bump-version > ~/go/bin/bump-version
+        else
+          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/bump-version > ~/go/bin/bump-version
+        fi
       shell: bash
     - run: chmod +x ~/go/bin/bump-version
       shell: bash

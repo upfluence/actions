@@ -21,12 +21,21 @@ inputs:
     required: false
     description: 'github token to be used'
     default: ${{ github.token }}
+  cli-version:
+    required: false
+    description: 'version of the cli to use'
+    default: 'latest'
 
 runs:
   using: 'composite'
   steps:
     - run: |
-        [ ! -f "~/go/bin/update-homebrew-formula" ] && mkdir -p ~/go/bin && curl -L https://github.com/upfluence/actions/releases/latest/download/update-homebrew-formula > ~/go/bin/update-homebrew-formula
+        mkdir -p ~/go/bin
+        if [ "${{ inputs.cli-version }}" = "latest" ]; then
+          curl -L https://github.com/upfluence/actions/releases/latest/download/update-homebrew-formula > ~/go/bin/update-homebrew-formula
+        else
+          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/update-homebrew-formula > ~/go/bin/update-homebrew-formula
+        fi
       shell: bash
     - run: chmod +x ~/go/bin/update-homebrew-formula
       shell: bash

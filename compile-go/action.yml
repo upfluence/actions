@@ -39,6 +39,10 @@ inputs:
     description: '[CSV] List of build tags to pass to go build'
     required: false
     default: ''
+  cli-version:
+    required: false
+    description: 'version of the cli to use'
+    default: 'latest'
 outputs:
   definitions:
     description: 'definitions'
@@ -48,7 +52,12 @@ runs:
   using: 'composite'
   steps:
     - run: |
-        [ ! -f "~/go/bin/compile-go" ] && mkdir -p ~/go/bin && curl -L https://github.com/upfluence/actions/releases/latest/download/compile-go > ~/go/bin/compile-go
+        mkdir -p ~/go/bin
+        if [ "${{ inputs.cli-version }}" = "latest" ]; then
+          curl -L https://github.com/upfluence/actions/releases/latest/download/compile-go > ~/go/bin/compile-go
+        else
+          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/compile-go > ~/go/bin/compile-go
+        fi
       shell: bash
     - run: chmod +x ~/go/bin/compile-go
       shell: bash
