@@ -28,6 +28,10 @@ inputs:
     description: 'tag mode, valid values: app,none'
     required: false
     default: 'app'
+  push-mode:
+    description: 'push mode, valid values: tags,digest,none'
+    required: false
+    default: 'tags'
   additional-tags:
     description: 'additional tags'
     required: false
@@ -52,6 +56,10 @@ inputs:
     description: 'enable GitHub Actions cache backend'
     required: false
     default: 'false'
+outputs:
+  digests:
+    description: 'JSON object mapping platforms to image digests'
+    value: ${{ steps.build-docker.outputs.digests }}
 
 runs:
   using: 'composite'
@@ -66,14 +74,16 @@ runs:
       shell: bash
     - run: chmod +x ~/go/bin/build-docker
       shell: bash
-    - run: |
+    - id: build-docker
+      run: |
         ~/go/bin/build-docker --dockerfile-paths ${{ inputs.dockerfile-paths }} \
                               --release-version ${{ inputs.version }} \
                               --arg-mode ${{ inputs.arg-mode }} \
                               --additional-args '${{ inputs.additional-args }}' \
-                              --os ${{ inputs.os }} --archs ${{ inputs.archs }} \
-                              --tag-mode ${{ inputs.tag-mode }} \
-                              --additional-tags '${{ inputs.additional-tags }}' \
+                               --os ${{ inputs.os }} --archs ${{ inputs.archs }} \
+                               --tag-mode ${{ inputs.tag-mode }} \
+                               --push-mode ${{ inputs.push-mode }} \
+                               --additional-tags '${{ inputs.additional-tags }}' \
                               --override-repositories '${{ inputs.override-repositories }}' \
                               --registries ${{ inputs.registries }} \
                               --gha-cache ${{ inputs.gha-cache }}

@@ -1,0 +1,57 @@
+name: 'stitch docker container'
+description: 'Create a multi-platform image from platform digests'
+inputs:
+  digests:
+    description: 'JSON object mapping platforms to image digests'
+    required: true
+  version:
+    description: 'target version'
+    required: true
+  tag-mode:
+    description: 'tag mode, valid values: app,none'
+    required: false
+    default: 'app'
+  additional-tags:
+    description: 'additional tags'
+    required: false
+    default: '""'
+  registries:
+    description: '[CSV] list of registries to push to'
+    required: false
+    default: 'index.docker.io'
+  override-repositories:
+    description: 'rewrite repository name'
+    required: false
+    default: ''
+  github-token:
+    required: false
+    description: 'github token to be used'
+    default: ${{ github.token }}
+  cli-version:
+    required: false
+    description: 'version of the cli to use'
+    default: 'latest'
+
+runs:
+  using: 'composite'
+  steps:
+    - run: |
+        mkdir -p ~/go/bin
+        if [ "${{ inputs.cli-version }}" = "latest" ]; then
+          curl -L https://github.com/upfluence/actions/releases/latest/download/stitch-docker > ~/go/bin/stitch-docker
+        else
+          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/stitch-docker > ~/go/bin/stitch-docker
+        fi
+      shell: bash
+    - run: chmod +x ~/go/bin/stitch-docker
+      shell: bash
+    - run: |
+        ~/go/bin/stitch-docker --digests '${{ inputs.digests }}' \
+                               --release-version ${{ inputs.version }} \
+                               --tag-mode ${{ inputs.tag-mode }} \
+                               --additional-tags '${{ inputs.additional-tags }}' \
+                               --override-repositories '${{ inputs.override-repositories }}' \
+                               --registries ${{ inputs.registries }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
