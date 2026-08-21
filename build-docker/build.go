@@ -134,7 +134,7 @@ func (c *config) outputs(name string, tags []string) []string {
 				names = append(names, fmt.Sprintf("%s/%s:%s", r, name, t))
 			}
 
-			vs = append(vs, "type=registry,name="+strings.Join(names, ","))
+			vs = append(vs, `type=registry,"name=`+strings.Join(names, ",")+`"`)
 		}
 	case pushDigest:
 		for _, r := range c.Registries {

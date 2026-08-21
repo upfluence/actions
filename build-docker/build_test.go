@@ -30,7 +30,7 @@ func TestConfigBuildArgs(t *testing.T) {
 			want: []string{
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64", "--metadata-file", "metadata.json",
-				"--output", "type=registry,name=registry.example.com/upfluence/example:0123456", ".",
+				"--output", `type=registry,"name=registry.example.com/upfluence/example:0123456"`, ".",
 			},
 		},
 		{
@@ -49,7 +49,7 @@ func TestConfigBuildArgs(t *testing.T) {
 			want: []string{
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64,linux/arm64", "--metadata-file", "metadata.json",
-				"--output", "type=registry,name=registry.example.com/upfluence/example:v1.2.3,registry.example.com/upfluence/example:latest,registry.example.com/upfluence/example:0123456",
+				"--output", `type=registry,"name=registry.example.com/upfluence/example:v1.2.3,registry.example.com/upfluence/example:latest,registry.example.com/upfluence/example:0123456"`,
 				"--build-arg", "GITHUB_TOKEN=token",
 				"--build-arg", "GIT_BRANCH=main",
 				"--build-arg", "GIT_COMMIT=0123456789",
@@ -79,7 +79,7 @@ func TestConfigBuildArgs(t *testing.T) {
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64", "--metadata-file", "metadata.json",
 				"--cache-from", "type=gha", "--cache-to", "type=gha,mode=max",
-				"--output", "type=registry,name=registry.example.com/upfluence/example:0123456,registry.example.com/upfluence/example:stable,registry.example.com/upfluence/example:canary",
+				"--output", `type=registry,"name=registry.example.com/upfluence/example:0123456,registry.example.com/upfluence/example:stable,registry.example.com/upfluence/example:canary"`,
 				"--build-arg", "FOO=bar", "--build-arg", "ZED=last", ".",
 			},
 		},
