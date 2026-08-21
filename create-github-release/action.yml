@@ -23,15 +23,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: |
-        mkdir -p ~/go/bin
-        if [ "${{ inputs.cli-version }}" = "latest" ]; then
-          curl -L https://github.com/upfluence/actions/releases/latest/download/create-github-release > ~/go/bin/create-github-release
-        else
-          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/create-github-release > ~/go/bin/create-github-release
-        fi
-      shell: bash
-    - run: chmod +x ~/go/bin/create-github-release
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" create-github-release ~/go/bin/create-github-release '${{ inputs.cli-version }}' '${{ github.action_ref }}'
       shell: bash
     - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments '${{ inputs.attachments }}'${{ inputs.latest != 'true' && ' --prerelease' || '' }}
       shell: bash

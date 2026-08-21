@@ -51,15 +51,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: |
-        mkdir -p ~/go/bin
-        if [ "${{ inputs.cli-version }}" = "latest" ]; then
-          curl -L https://github.com/upfluence/actions/releases/latest/download/compile-go > ~/go/bin/compile-go
-        else
-          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/compile-go > ~/go/bin/compile-go
-        fi
-      shell: bash
-    - run: chmod +x ~/go/bin/compile-go
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" compile-go ~/go/bin/compile-go '${{ inputs.cli-version }}' '${{ github.action_ref }}'
       shell: bash
     - run: mkdir -p ${{ inputs.dist-dir }}
       shell: bash

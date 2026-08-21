@@ -29,15 +29,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: |
-        mkdir -p ~/go/bin
-        if [ "${{ inputs.cli-version }}" = "latest" ]; then
-          curl -L https://github.com/upfluence/actions/releases/latest/download/update-homebrew-formula > ~/go/bin/update-homebrew-formula
-        else
-          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/update-homebrew-formula > ~/go/bin/update-homebrew-formula
-        fi
-      shell: bash
-    - run: chmod +x ~/go/bin/update-homebrew-formula
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" update-homebrew-formula ~/go/bin/update-homebrew-formula '${{ inputs.cli-version }}' '${{ github.action_ref }}'
       shell: bash
     - run: ~/go/bin/update-homebrew-formula --release-version ${{ inputs.version }} --cli-name ${{ inputs.cli-name }} --repository ${{ inputs.repository }} --template ${{ inputs.template }}
       shell: bash

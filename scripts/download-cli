@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+tool=$1
+destination=$2
+version=$3
+action_ref=${4:-}
+
+case "$(uname -m)" in
+  x86_64|amd64) arch=amd64 ;;
+  aarch64|arm64) arch=arm64 ;;
+  *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+esac
+
+if [ "$version" = "latest" ] && [[ "$action_ref" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+  version=$action_ref
+fi
+
+asset="${tool}_linux_${arch}"
+
+if [ "$version" = "latest" ]; then
+  url="https://github.com/upfluence/actions/releases/latest/download/${asset}"
+else
+  url="https://github.com/upfluence/actions/releases/download/${version}/${asset}"
+fi
+
+mkdir -p "$(dirname "$destination")"
+
+if ! curl -fL "$url" -o "$destination"; then
+  if [ "$arch" != "amd64" ]; then
+    exit 1
+  fi
+
+  curl -fL "${url%_linux_*}" -o "$destination"
+fi
+
+chmod +x "$destination"

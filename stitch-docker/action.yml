@@ -35,15 +35,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: |
-        mkdir -p ~/go/bin
-        if [ "${{ inputs.cli-version }}" = "latest" ]; then
-          curl -L https://github.com/upfluence/actions/releases/latest/download/stitch-docker > ~/go/bin/stitch-docker
-        else
-          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/stitch-docker > ~/go/bin/stitch-docker
-        fi
-      shell: bash
-    - run: chmod +x ~/go/bin/stitch-docker
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" stitch-docker ~/go/bin/stitch-docker '${{ inputs.cli-version }}' '${{ github.action_ref }}'
       shell: bash
     - run: |
         ~/go/bin/stitch-docker --digests '${{ inputs.digests }}' \

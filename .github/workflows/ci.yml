@@ -60,6 +60,8 @@ jobs:
           linker-mode: cli
           dist-dir: dist/
           version: ${{ steps.bump-version.outputs.version }}
+          arch: amd64,arm64
+          name-template: '{{ .Name }}_{{ .OS }}_{{ .Arch }}'
       - name: Create release
         uses: ./create-github-release
         with:

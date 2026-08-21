@@ -24,15 +24,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: |
-        mkdir -p ~/go/bin
-        if [ "${{ inputs.cli-version }}" = "latest" ]; then
-          curl -L https://github.com/upfluence/actions/releases/latest/download/bump-version > ~/go/bin/bump-version
-        else
-          curl -L https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/bump-version > ~/go/bin/bump-version
-        fi
-      shell: bash
-    - run: chmod +x ~/go/bin/bump-version
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" bump-version ~/go/bin/bump-version '${{ inputs.cli-version }}' '${{ github.action_ref }}'
       shell: bash
     - id: bump-version
       run: ~/go/bin/bump-version --strategy ${{ inputs.strategy }} --strategies-by-branch ${{ inputs.strategies-by-branch }}
