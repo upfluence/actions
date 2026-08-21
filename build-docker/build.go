@@ -128,21 +128,23 @@ func (c *config) outputs(name string, tags []string) []string {
 	switch c.PushMode {
 	case pushTags:
 		for _, r := range c.Registries {
-			var names []string
-
 			for _, t := range tags {
-				names = append(names, fmt.Sprintf("%s/%s:%s", r, name, t))
+				vs = append(vs, "--tag", fmt.Sprintf("%s/%s:%s", r, name, t))
 			}
-
-			vs = append(vs, `type=registry,"name=`+strings.Join(names, ",")+`"`)
 		}
+
+		vs = append(vs, "--output", "type=registry")
 	case pushDigest:
 		for _, r := range c.Registries {
-			vs = append(vs, fmt.Sprintf(
-				"type=image,name=%s/%s,push=true,push-by-digest=true,name-canonical=true",
-				r,
-				name,
-			))
+			vs = append(
+				vs,
+				"--output",
+				fmt.Sprintf(
+					"type=image,name=%s/%s,push=true,push-by-digest=true,name-canonical=true",
+					r,
+					name,
+				),
+			)
 		}
 	}
 
@@ -224,9 +226,7 @@ func (b build) buildArgs(metadataFile string) []string {
 		vs = append(vs, "--cache-from", "type=gha", "--cache-to", "type=gha,mode=max")
 	}
 
-	for _, output := range b.outputs {
-		vs = append(vs, "--output", output)
-	}
+	vs = append(vs, b.outputs...)
 
 	for _, k := range slices.Sorted(maps.Keys(b.args)) {
 		v := b.args[k]
