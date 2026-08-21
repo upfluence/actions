@@ -71,8 +71,10 @@ runs:
         script: |
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
           core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
-    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" build-docker ~/go/bin/build-docker '${{ inputs.cli-version }}' '${{ github.action_ref }}'
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" build-docker ~/go/bin/build-docker '${{ inputs.cli-version }}' "$ACTION_REF"
       shell: bash
+      env:
+        ACTION_REF: ${{ github.action_ref }}
     - id: build-docker
       run: |
         ~/go/bin/build-docker --dockerfile-paths ${{ inputs.dockerfile-paths }} \

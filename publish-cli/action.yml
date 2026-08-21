@@ -35,8 +35,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" publish-cli ~/go/bin/publish-cli '${{ inputs.cli-version }}' '${{ github.action_ref }}'
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" publish-cli ~/go/bin/publish-cli '${{ inputs.cli-version }}' "$ACTION_REF"
       shell: bash
+      env:
+        ACTION_REF: ${{ github.action_ref }}
     - run: ~/go/bin/publish-cli --release-version ${{ inputs.version }} --homebrew-tap ${{ inputs.homebrew-tap }} --workflow-filename ${{ inputs.workflow-filename }} --template ${{ inputs.template }} --target-ref ${{ inputs.target-ref }}
       shell: bash
       env:

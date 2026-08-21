@@ -23,8 +23,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" create-github-release ~/go/bin/create-github-release '${{ inputs.cli-version }}' '${{ github.action_ref }}'
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" create-github-release ~/go/bin/create-github-release '${{ inputs.cli-version }}' "$ACTION_REF"
       shell: bash
+      env:
+        ACTION_REF: ${{ github.action_ref }}
     - run: ~/go/bin/create-github-release --release-version ${{ inputs.version }} --attachments '${{ inputs.attachments }}'${{ inputs.latest != 'true' && ' --prerelease' || '' }}
       shell: bash
       env:

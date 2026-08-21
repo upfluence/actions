@@ -7,6 +7,10 @@ destination=$2
 version=$3
 action_ref=${4:-}
 
+if [ -z "$action_ref" ] && [ -n "${GITHUB_ACTION_PATH:-}" ]; then
+  action_ref=$(basename "$(dirname "$GITHUB_ACTION_PATH")")
+fi
+
 case "$(uname -m)" in
   x86_64|amd64) arch=amd64 ;;
   aarch64|arm64) arch=arm64 ;;

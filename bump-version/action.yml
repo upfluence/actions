@@ -24,8 +24,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" bump-version ~/go/bin/bump-version '${{ inputs.cli-version }}' '${{ github.action_ref }}'
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" bump-version ~/go/bin/bump-version '${{ inputs.cli-version }}' "$ACTION_REF"
       shell: bash
+      env:
+        ACTION_REF: ${{ github.action_ref }}
     - id: bump-version
       run: ~/go/bin/bump-version --strategy ${{ inputs.strategy }} --strategies-by-branch ${{ inputs.strategies-by-branch }}
       shell: bash

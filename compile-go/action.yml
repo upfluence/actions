@@ -51,8 +51,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" compile-go ~/go/bin/compile-go '${{ inputs.cli-version }}' '${{ github.action_ref }}'
+    - run: bash "$GITHUB_ACTION_PATH/../scripts/download-cli" compile-go ~/go/bin/compile-go '${{ inputs.cli-version }}' "$ACTION_REF"
       shell: bash
+      env:
+        ACTION_REF: ${{ github.action_ref }}
     - run: mkdir -p ${{ inputs.dist-dir }}
       shell: bash
     - id: compile-go
