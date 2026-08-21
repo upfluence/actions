@@ -64,6 +64,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Expose Runtime Envs for Custom Tools
+      if: inputs.gha-cache == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
     - run: |
         mkdir -p ~/go/bin
         if [ "${{ inputs.cli-version }}" = "latest" ]; then
@@ -90,5 +97,3 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
-        ACTIONS_CACHE_URL: ${{ env.ACTIONS_CACHE_URL }}
-        ACTIONS_RUNTIME_TOKEN: ${{ env.ACTIONS_RUNTIME_TOKEN }}
