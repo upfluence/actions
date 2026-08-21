@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/upfluence/pkg/testutil"
 
 	dockerconfig "github.com/upfluence/actions/pkg/docker"
@@ -26,8 +27,10 @@ func TestConfigCommands(t *testing.T) {
 					Registries: []string{"index.docker.io"},
 				},
 				Digests: digests{
-					"linux/arm64": "sha256:arm64",
-					"linux/amd64": "sha256:amd64",
+					values: map[string]string{
+						"linux/arm64": "sha256:arm64",
+						"linux/amd64": "sha256:amd64",
+					},
 				},
 			},
 			want: [][]string{
@@ -54,7 +57,9 @@ func TestConfigCommands(t *testing.T) {
 					},
 				},
 				Digests: digests{
-					"linux/amd64": "sha256:amd64",
+					values: map[string]string{
+						"linux/amd64": "sha256:amd64",
+					},
 				},
 			},
 			want: [][]string{
@@ -91,4 +96,18 @@ func TestConfigCommands(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestDigestsParse(t *testing.T) {
+	var got digests
+
+	err := got.Parse(`{"linux/amd64":"sha256:amd64","linux/arm64":"sha256:arm64"}`)
+
+	require.NoError(t, err)
+	assert.Equal(t, digests{
+		values: map[string]string{
+			"linux/amd64": "sha256:amd64",
+			"linux/arm64": "sha256:arm64",
+		},
+	}, got)
 }

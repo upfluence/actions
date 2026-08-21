@@ -21,10 +21,12 @@ var defaultConfig = config{
 
 var errDigestsEmpty = errors.New("digests cannot be empty")
 
-type digests map[string]string
+type digests struct {
+	values map[string]string
+}
 
 func (ds *digests) Parse(v string) error {
-	return errors.Wrap(json.Unmarshal([]byte(v), ds), "invalid digests")
+	return errors.Wrap(json.Unmarshal([]byte(v), &ds.values), "invalid digests")
 }
 
 type config struct {
@@ -34,15 +36,15 @@ type config struct {
 }
 
 func (c config) commands(cctx toolkit.CommandContext) ([][]string, error) {
-	if len(c.Digests) == 0 {
+	if len(c.Digests.values) == 0 {
 		return nil, errDigestsEmpty
 	}
 
 	name := c.Repository(cctx.Repository)
 	tags := c.Tags(cctx)
-	platforms := make([]string, 0, len(c.Digests))
+	platforms := make([]string, 0, len(c.Digests.values))
 
-	for platform := range c.Digests {
+	for platform := range c.Digests.values {
 		platforms = append(platforms, platform)
 	}
 
@@ -58,7 +60,7 @@ func (c config) commands(cctx toolkit.CommandContext) ([][]string, error) {
 		}
 
 		for _, platform := range platforms {
-			digest := c.Digests[platform]
+			digest := c.Digests.values[platform]
 
 			if digest == "" {
 				return nil, fmt.Errorf("digest for platform %q cannot be empty", platform)
