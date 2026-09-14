@@ -30,6 +30,7 @@ func TestConfigBuildArgs(t *testing.T) {
 			want: []string{
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64", "--metadata-file", "metadata.json",
+				"--sbom=false",
 				"--tag", "registry.example.com/upfluence/example:0123456",
 				"--output", "type=registry", ".",
 			},
@@ -46,10 +47,12 @@ func TestConfigBuildArgs(t *testing.T) {
 				Archs:    []string{"amd64", "arm64"},
 				ArgMode:  argApp,
 				PushMode: pushTags,
+				SBOM:     true,
 			},
 			want: []string{
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64,linux/arm64", "--metadata-file", "metadata.json",
+				"--sbom=true",
 				"--tag", "registry.example.com/upfluence/example:v1.2.3",
 				"--tag", "registry.example.com/upfluence/example:latest",
 				"--tag", "registry.example.com/upfluence/example:0123456",
@@ -89,6 +92,7 @@ func TestConfigBuildArgs(t *testing.T) {
 			want: []string{
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64", "--metadata-file", "metadata.json",
+				"--sbom=false",
 				"--cache-from", "type=gha", "--cache-to", "type=gha,mode=max",
 				"--tag", "registry.example.com/upfluence/example:0123456",
 				"--tag", "registry.example.com/upfluence/example:stable",
@@ -114,6 +118,7 @@ func TestConfigBuildArgs(t *testing.T) {
 			want: []string{
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64", "--metadata-file", "metadata.json",
+				"--sbom=false",
 				"--output", "type=image,name=registry.example.com/upfluence/example,push=true,push-by-digest=true,name-canonical=true",
 				"--output", "type=image,name=backup.example.com/upfluence/example,push=true,push-by-digest=true,name-canonical=true",
 				".",
@@ -133,6 +138,7 @@ func TestConfigBuildArgs(t *testing.T) {
 			want: []string{
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64", "--metadata-file", "metadata.json",
+				"--sbom=false",
 				"--tag", "registry.example.com/upfluence/example:0123456",
 				"--tag", "backup.example.com/upfluence/example:0123456",
 				"--output", "type=registry",
@@ -149,6 +155,7 @@ func TestConfigBuildArgs(t *testing.T) {
 			want: []string{
 				"buildx", "build", "--pull", "--file", "Dockerfile",
 				"--platform", "linux/amd64", "--metadata-file", "metadata.json",
+				"--sbom=false",
 				".",
 			},
 		},
@@ -220,6 +227,10 @@ func TestConfigBuildEnv(t *testing.T) {
 			assert.Equal(t, tt.want, b.env())
 		})
 	}
+}
+
+func TestDefaultConfigEnablesSBOM(t *testing.T) {
+	assert.True(t, defaultConfig.SBOM)
 }
 
 func TestPlatformDigests(t *testing.T) {

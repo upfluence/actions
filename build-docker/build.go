@@ -26,6 +26,7 @@ var defaultConfig = config{
 	DockerfilePaths: []string{"Dockerfile"},
 	OS:              "linux",
 	Archs:           []string{"amd64"},
+	SBOM:            true,
 }
 
 const (
@@ -115,6 +116,7 @@ type config struct {
 	PushMode pushMode `flag:"push-mode"`
 
 	UseGHACache bool `flag:"gha-cache"`
+	SBOM        bool `flag:"sbom"`
 }
 
 func (c *config) platform() string {
@@ -195,6 +197,7 @@ func (c *config) build(cctx toolkit.CommandContext, path, fname string) build {
 		dockerfile: fname,
 		platform:   c.platform(),
 		ghaCache:   c.UseGHACache,
+		sbom:       c.SBOM,
 		registries: c.Registries,
 		args:       c.args(cctx),
 		envSecrets: c.envSecrets(cctx),
@@ -229,6 +232,7 @@ type build struct {
 	srcSecrets map[string]string
 	platform   string
 	ghaCache   bool
+	sbom       bool
 	outputs    []string
 
 	registries []string
@@ -245,6 +249,7 @@ func (b build) buildArgs(metadataFile string) []string {
 		b.platform,
 		"--metadata-file",
 		metadataFile,
+		fmt.Sprintf("--sbom=%t", b.sbom),
 	}
 
 	if b.ghaCache {

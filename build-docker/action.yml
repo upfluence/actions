@@ -64,6 +64,10 @@ inputs:
     description: 'enable GitHub Actions cache backend'
     required: false
     default: 'false'
+  sbom:
+    description: 'generate an SBOM attestation'
+    required: false
+    default: 'true'
 outputs:
   digests:
     description: 'JSON object mapping platforms to image digests'
@@ -97,7 +101,8 @@ runs:
                                --additional-tags '${{ inputs.additional-tags }}' \
                               --override-repositories '${{ inputs.override-repositories }}' \
                               --registries ${{ inputs.registries }} \
-                              --gha-cache ${{ inputs.gha-cache }}
+                              --gha-cache ${{ inputs.gha-cache }} \
+                              --sbom ${{ inputs.sbom }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
