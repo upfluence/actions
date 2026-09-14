@@ -59,11 +59,12 @@ func TestConfigBuildArgs(t *testing.T) {
 				"--build-arg", "GIT_COMMIT=0123456789",
 				"--build-arg", "GIT_REMOTE=https://github.com/upfluence/example",
 				"--build-arg", "SEMVER_VERSION=v1.2.3",
+				"--secret", "id=GITHUB_TOKEN,env=GITHUB_TOKEN",
 				".",
 			},
 		},
 		{
-			name: "additional tags and args with cache",
+			name: "additional tags args and secrets with cache",
 			haveConfig: config{
 				Config: dockerconfig.Config{
 					TagMode:        dockerconfig.None,
@@ -76,6 +77,12 @@ func TestConfigBuildArgs(t *testing.T) {
 					"FOO": "bar",
 					"ZED": "last",
 				},
+				AdditionalEnvSecrets: map[string]string{
+					"API_TOKEN": "secret",
+				},
+				AdditionalSrcSecrets: map[string]string{
+					"BUNDLE_CONFIG": "/tmp/bundle-config",
+				},
 				PushMode:    pushTags,
 				UseGHACache: true,
 			},
@@ -87,7 +94,10 @@ func TestConfigBuildArgs(t *testing.T) {
 				"--tag", "registry.example.com/upfluence/example:stable",
 				"--tag", "registry.example.com/upfluence/example:canary",
 				"--output", "type=registry",
-				"--build-arg", "FOO=bar", "--build-arg", "ZED=last", ".",
+				"--build-arg", "FOO=bar", "--build-arg", "ZED=last",
+				"--secret", "id=API_TOKEN,env=API_TOKEN",
+				"--secret", "id=BUNDLE_CONFIG,src=/tmp/bundle-config",
+				".",
 			},
 		},
 		{
@@ -156,6 +166,58 @@ func TestConfigBuildArgs(t *testing.T) {
 			)
 
 			assert.Equal(t, tt.want, b.buildArgs("metadata.json"))
+		})
+	}
+}
+
+func TestConfigBuildEnv(t *testing.T) {
+	for _, tt := range []struct {
+		name       string
+		haveConfig config
+		want       map[string]string
+	}{
+		{
+			name: "app mode exposes GitHub token",
+			haveConfig: config{
+				Config: dockerconfig.Config{
+					TagMode: dockerconfig.None,
+				},
+				ArgMode: argApp,
+			},
+			want: map[string]string{
+				"GITHUB_TOKEN": "token",
+			},
+		},
+		{
+			name: "additional secret overrides app mode",
+			haveConfig: config{
+				Config: dockerconfig.Config{
+					TagMode: dockerconfig.None,
+				},
+				ArgMode: argApp,
+				AdditionalEnvSecrets: map[string]string{
+					"GITHUB_TOKEN": "override",
+					"NPM_TOKEN":    "npm-token",
+				},
+			},
+			want: map[string]string{
+				"GITHUB_TOKEN": "override",
+				"NPM_TOKEN":    "npm-token",
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			b := tt.haveConfig.build(
+				toolkit.CommandContext{
+					Repository: "upfluence/example",
+					Sha:        "0123456789",
+					Token:      "token",
+				},
+				"Dockerfile",
+				"Dockerfile",
+			)
+
+			assert.Equal(t, tt.want, b.env())
 		})
 	}
 }

@@ -16,6 +16,14 @@ inputs:
     description: 'additional args values, i.e. foo=bar,biz=buz'
     required: false
     default: ''
+  additional-env-secrets:
+    description: 'additional BuildKit secrets passed from environment values, i.e. foo=bar,biz=buz'
+    required: false
+    default: ''
+  additional-src-secrets:
+    description: 'additional BuildKit secrets passed from files, i.e. foo=/path/to/foo'
+    required: false
+    default: ''
   os:
     description: 'to be filled in the platform'
     required: false
@@ -81,7 +89,9 @@ runs:
                               --release-version ${{ inputs.version }} \
                               --arg-mode ${{ inputs.arg-mode }} \
                               --additional-args '${{ inputs.additional-args }}' \
-                               --os ${{ inputs.os }} --archs ${{ inputs.archs }} \
+                              --additional-env-secrets '${{ inputs.additional-env-secrets }}' \
+                              --additional-src-secrets '${{ inputs.additional-src-secrets }}' \
+                              --os ${{ inputs.os }} --archs ${{ inputs.archs }} \
                                --tag-mode ${{ inputs.tag-mode }} \
                                --push-mode ${{ inputs.push-mode }} \
                                --additional-tags '${{ inputs.additional-tags }}' \

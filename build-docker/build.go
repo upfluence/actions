@@ -71,6 +71,17 @@ func (am argMode) args(cctx toolkit.CommandContext, v string) map[string]string 
 	}
 }
 
+func (am argMode) secrets(cctx toolkit.CommandContext, _ string) map[string]string {
+	switch am {
+	case argApp:
+		return map[string]string{
+			"GITHUB_TOKEN": cctx.Token,
+		}
+	default:
+		return make(map[string]string)
+	}
+}
+
 type pushMode int
 
 func (pm *pushMode) Parse(v string) error {
@@ -93,8 +104,10 @@ type config struct {
 
 	DockerfilePaths []string `flag:"dockerfile-paths"`
 
-	ArgMode        argMode           `flag:"arg-mode"`
-	AdditionalArgs map[string]string `flag:"additional-args"`
+	ArgMode              argMode           `flag:"arg-mode"`
+	AdditionalArgs       map[string]string `flag:"additional-args"`
+	AdditionalEnvSecrets map[string]string `flag:"additional-env-secrets"`
+	AdditionalSrcSecrets map[string]string `flag:"additional-src-secrets"`
 
 	OS    string   `flag:"os"`
 	Archs []string `flag:"archs"`
@@ -118,6 +131,14 @@ func (c *config) args(cctx toolkit.CommandContext) map[string]string {
 	vs := c.ArgMode.args(cctx, c.Version)
 
 	maps.Copy(vs, c.AdditionalArgs)
+
+	return vs
+}
+
+func (c *config) envSecrets(cctx toolkit.CommandContext) map[string]string {
+	vs := c.ArgMode.secrets(cctx, c.Version)
+
+	maps.Copy(vs, c.AdditionalEnvSecrets)
 
 	return vs
 }
@@ -176,6 +197,8 @@ func (c *config) build(cctx toolkit.CommandContext, path, fname string) build {
 		ghaCache:   c.UseGHACache,
 		registries: c.Registries,
 		args:       c.args(cctx),
+		envSecrets: c.envSecrets(cctx),
+		srcSecrets: c.AdditionalSrcSecrets,
 		outputs:    c.outputs(name, c.Tags(cctx)),
 	}
 }
@@ -202,6 +225,8 @@ type build struct {
 	name       string
 	dockerfile string
 	args       map[string]string
+	envSecrets map[string]string
+	srcSecrets map[string]string
 	platform   string
 	ghaCache   bool
 	outputs    []string
@@ -234,7 +259,19 @@ func (b build) buildArgs(metadataFile string) []string {
 		vs = append(vs, "--build-arg", fmt.Sprintf("%s=%s", k, v))
 	}
 
+	for _, k := range slices.Sorted(maps.Keys(b.envSecrets)) {
+		vs = append(vs, "--secret", fmt.Sprintf("id=%s,env=%s", k, k))
+	}
+
+	for _, k := range slices.Sorted(maps.Keys(b.srcSecrets)) {
+		vs = append(vs, "--secret", fmt.Sprintf("id=%s,src=%s", k, b.srcSecrets[k]))
+	}
+
 	return append(vs, ".")
+}
+
+func (b build) env() map[string]string {
+	return b.envSecrets
 }
 
 func (b build) imageReference(imageDigest string) (string, error) {
@@ -335,13 +372,14 @@ func main() {
 
 			exc := c.executor(cctx.Logger)
 
-			exec := func(args []string, stdout io.Writer) error {
+			exec := func(args []string, env map[string]string, stdout io.Writer) error {
 				return errors.Wrap(
 					exc.Exec(
 						ctx,
 						executil.Command{
 							Cmd:    "docker",
 							Args:   args,
+							Env:    env,
 							Stdout: stdout,
 							Stderr: cctx.CommandContext.Stderr,
 						},
@@ -367,7 +405,7 @@ func main() {
 
 				defer os.Remove(metadataPath)
 
-				if err := exec(b.buildArgs(metadataPath), cctx.CommandContext.Stdout); err != nil {
+				if err := exec(b.buildArgs(metadataPath), b.env(), cctx.CommandContext.Stdout); err != nil {
 					return err
 				}
 
@@ -401,6 +439,7 @@ func main() {
 
 				if err := exec(
 					[]string{"buildx", "imagetools", "inspect", "--raw", ref},
+					nil,
 					&manifest,
 				); err != nil {
 					return err
