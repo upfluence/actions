@@ -54,7 +54,7 @@ jobs:
         run: pnpm lint:js
       - name: Lint HBS
         run: pnpm prettier -c **/*.hbs
-  lint_and_test:
+  test:
     uses: ./.github/workflows/any-js-ember-test.yml
     secrets: inherit
     with:
