@@ -1,0 +1,84 @@
+name: any-js-ember-test
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: "20"
+      timeout-minutes:
+        type: number
+        default: 10
+      scenarios:
+        description: Additional ember-try scenarios; defaults to vars.EMBER_TRY_SCENARIOS.
+        type: string
+        default: ""
+      test-variants:
+        description: JSON array of test variants, each with a name and command.
+        type: string
+        default: '[{"name":"default","command":"pnpm test:ember"}]'
+      compatibility-blocking:
+        type: boolean
+        default: false
+      ember-try-working-directory:
+        description: Ember CLI project directory for compatibility tests, relative to the repo root.
+        type: string
+        default: "."
+
+env:
+  GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+  FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+  EMBER_TRY_SCENARIOS: ${{ inputs.scenarios || vars.EMBER_TRY_SCENARIOS || '[]' }}
+
+jobs:
+  current:
+    name: current / ${{ matrix.variant.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(inputs.test-variants) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "${{ vars.PNPM_VERSION }}"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "${{ inputs.node-version }}"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Test current dependencies
+        env:
+          TEST_COMMAND: ${{ matrix.variant.command }}
+        run: bash -e -o pipefail -c "$TEST_COMMAND"
+
+  compatibility:
+    name: ${{ matrix.scenario.name }} / ${{ matrix.variant.name }}
+    if: ${{ fromJSON(inputs.scenarios || vars.EMBER_TRY_SCENARIOS || '[]')[0] != null }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    continue-on-error: ${{ !inputs.compatibility-blocking }}
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: ${{ fromJSON(inputs.scenarios || vars.EMBER_TRY_SCENARIOS || '[]') }}
+        variant: ${{ fromJSON(inputs.test-variants) }}
+    env:
+      EMBER_TEST_VARIANTS: ${{ inputs.test-variants }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "${{ vars.PNPM_VERSION }}"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "${{ inputs.node-version }}"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Test additional dependency scenario
+        working-directory: ${{ inputs.ember-try-working-directory }}
+        env:
+          SCENARIO_NAME: ${{ matrix.scenario.name }}-${{ matrix.variant.name }}
+        run: pnpm exec ember try:one "$SCENARIO_NAME"

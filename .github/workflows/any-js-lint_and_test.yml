@@ -1,0 +1,66 @@
+name: any-js-lint_and_test
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: false
+        type: string
+        default: "20"
+      timeout-minutes:
+        required: false
+        type: number
+        default: 10
+      scenarios:
+        type: string
+        default: ""
+      test-variants:
+        type: string
+        default: '[{"name":"default","command":"pnpm test:ember"}]'
+      compatibility-blocking:
+        type: boolean
+        default: false
+      ember-try-working-directory:
+        type: string
+        default: "."
+
+env:
+  NODE_VERSION: ${{ inputs.node-version }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    if: |
+      !contains('refs/heads/master refs/heads/main', github.ref) ||
+      contains(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '${{ vars.PNPM_VERSION }}'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+          cache: "pnpm"
+      - name: Install Dependencies
+        run: pnpm install
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+      - name: Lint
+        run: pnpm lint:js
+      - name: Lint HBS
+        run: pnpm prettier -c **/*.hbs
+  lint_and_test:
+    uses: ./.github/workflows/any-js-ember-test.yml
+    secrets: inherit
+    with:
+      node-version: ${{ inputs.node-version }}
+      timeout-minutes: ${{ inputs.timeout-minutes }}
+      scenarios: ${{ inputs.scenarios }}
+      test-variants: ${{ inputs.test-variants }}
+      compatibility-blocking: ${{ inputs.compatibility-blocking }}
+      ember-try-working-directory: ${{ inputs.ember-try-working-directory }}
