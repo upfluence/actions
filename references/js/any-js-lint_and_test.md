@@ -21,6 +21,10 @@ jobs:
 
 The wrapper calls `./.github/workflows/any-js-ember-test.yml` from the same repository revision. No private reusable workflow or SSH-agent setup is involved in the lint-and-test path.
 
+Lint installs use the same HTTPS Git authentication as tests: SSH-style GitHub
+dependency URLs are rewritten to HTTPS, with the caller's `PAT_TOKEN` supplying
+repository credentials. The token must have access to any private Git dependencies.
+
 ## Inputs
 
 | Name | Type | Default | Effect |

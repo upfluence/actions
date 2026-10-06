@@ -115,6 +115,13 @@ There is no preparation job, file reader, custom matrix builder, schema validato
 
 Use `secrets: inherit`: private registry installs use the caller's `PAT_TOKEN` and `FONTAWESOME_NPM_AUTH_TOKEN`. The workflow also uses `vars.PNPM_VERSION` and a committed pnpm lockfile. Authentication remains available during ember-try reinstalls. No SSH-agent setup or SSH key is required by this workflow. Check required-status names when adopting or changing the workflow; no deployment occurs in compatibility runners.
 
+GitHub SSH-style Git dependencies are rewritten to HTTPS and authenticated with
+`PAT_TOKEN`, which must have read access to those repositories. A Git credential
+helper reads the token from the job environment rather than embedding it in URLs
+or saving its value in Git configuration. Checkout does not persist its repo-scoped
+credentials, and the Git setup remains active for ember-try's dependency reinstalls.
+Missing or insufficient credentials fail without interactive prompts.
+
 ## V2 addons with a separate test app
 
 Point `ember-try-working-directory` at the test app and keep build orchestration in
