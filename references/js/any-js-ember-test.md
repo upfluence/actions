@@ -98,6 +98,8 @@ matrix:
 
 GitHub builds the cross-product. Two targets and two variants produce four compatibility jobs, plus two required current jobs. Compatibility runs on every caller event and is skipped only when no scenarios are configured. `continue-on-error` applies only to compatibility; `fail-fast: false` keeps variants independent.
 
+Job labels distinguish the baseline from additional targets: `Current tests (default)` versus `Extra scenario: ember-4.12 (default)`. The target and variant stay in a single label rather than slash-separated segments, so they remain visible in GitHub's job sidebar.
+
 There is no preparation job, file reader, custom matrix builder, schema validator, or generated runtime config. Compatibility exposes `test-variants` as `EMBER_TEST_VARIANTS` and runs the matching scenario in the repo's `config/ember-try.js`, such as `ember-4.12-wednesday`.
 
 ## Inputs

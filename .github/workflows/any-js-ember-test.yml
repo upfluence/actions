@@ -32,7 +32,7 @@ env:
 
 jobs:
   current:
-    name: current / ${{ matrix.variant.name }}
+    name: "Current tests (${{ matrix.variant.name }})"
     runs-on: ubuntu-24.04
     timeout-minutes: ${{ inputs.timeout-minutes }}
     strategy:
@@ -55,7 +55,7 @@ jobs:
         run: bash -e -o pipefail -c "$TEST_COMMAND"
 
   compatibility:
-    name: ${{ matrix.scenario.name }} / ${{ matrix.variant.name }}
+    name: "Extra scenario: ${{ matrix.scenario.name }} (${{ matrix.variant.name }})"
     if: ${{ fromJSON(inputs.scenarios || vars.EMBER_TRY_SCENARIOS || '[]')[0] != null }}
     runs-on: ubuntu-24.04
     timeout-minutes: ${{ inputs.timeout-minutes }}
