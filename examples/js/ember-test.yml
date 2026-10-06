@@ -1,0 +1,19 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [master, qa, staging]
+
+jobs:
+  # Keep existing lint/typecheck jobs here as needed.
+  test:
+    uses: upfluence/actions/.github/workflows/any-js-ember-test.yml@master
+    secrets: inherit
+    with:
+      timeout-minutes: 12
+      test-variants: |
+        [
+          { "name": "default", "command": "pnpm test:default" },
+          { "name": "wednesday", "command": "pnpm test:wednesday" }
+        ]
