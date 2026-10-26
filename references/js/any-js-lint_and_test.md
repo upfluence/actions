@@ -21,15 +21,16 @@ jobs:
 
 The wrapper calls `./.github/workflows/any-js-ember-test.yml` from the same repository revision. No private reusable workflow or SSH-agent setup is involved in the lint-and-test path.
 
-Lint installs use the same HTTPS Git authentication as tests: SSH-style GitHub
-dependency URLs are rewritten to HTTPS, with the caller's `PAT_TOKEN` supplying
-repository credentials. The token must have access to any private Git dependencies.
+Lint installs use the same HTTPS Git authentication as tests, both provided by the
+[`setup-js`](setup-js.md) composite action: SSH-style GitHub dependency URLs are
+rewritten to HTTPS, with the caller's `PAT_TOKEN` supplying repository credentials.
+The token must have access to any private Git dependencies.
 
 ## Inputs
 
 | Name | Type | Default | Effect |
 | --- | --- | --- | --- |
-| node-version | string | '20' | Sets the Node version. |
+| node-version | string | vars.NODE_VERSION, then '20' | Sets the Node version. |
 | timeout-minutes | number | 10 | Sets the timeout per lint/test job. |
 | scenarios | string | empty | Additional scenario JSON; defaults to `vars.EMBER_TRY_SCENARIOS`. |
 | test-variants | string | default / test:ember | JSON array of test variant names and commands. |
@@ -43,6 +44,6 @@ default/Wednesday variants, local execution, and required-check migration notes.
 
 | Action | Version |
 | --- | --- |
-| actions/checkout | v6 |
-| pnpm/action-setup | v4 |
-| actions/setup-node | v6 |
+| upfluence/actions/setup-js | master |
+
+`setup-js` pins `actions/checkout`, `pnpm/action-setup` and `actions/setup-node`; see [its reference](setup-js.md#actions-used) for the versions.

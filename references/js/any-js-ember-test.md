@@ -106,14 +106,17 @@ There is no preparation job, file reader, custom matrix builder, schema validato
 
 | Input | Default | Effect |
 | --- | --- | --- |
-| `node-version` | `20` | Node version for test jobs. |
+| `node-version` | `vars.NODE_VERSION`, then `20` | Node version for test jobs. |
 | `timeout-minutes` | `10` | Timeout per test job. |
 | `scenarios` | empty | Overrides `vars.EMBER_TRY_SCENARIOS`; `[]` disables additional targets. |
 | `test-variants` | default / test:ember | JSON array of test variant names and commands. |
 | `compatibility-blocking` | `false` | Require additional targets to pass. |
 | `ember-try-working-directory` | `.` | Ember CLI project directory for compatibility tests, relative to the repo root. |
 
-Use `secrets: inherit`: private registry installs use the caller's `PAT_TOKEN` and `FONTAWESOME_NPM_AUTH_TOKEN`. The workflow also uses `vars.PNPM_VERSION` and a committed pnpm lockfile. Authentication remains available during ember-try reinstalls. No SSH-agent setup or SSH key is required by this workflow. Check required-status names when adopting or changing the workflow; no deployment occurs in compatibility runners.
+Use `secrets: inherit`: private registry installs use the caller's `PAT_TOKEN` and `FONTAWESOME_NPM_AUTH_TOKEN`. The workflow also uses `vars.PNPM_VERSION`, `vars.NODE_VERSION` unless `node-version` is passed (falling back to `20` when the variable is not visible to the repository), and a committed pnpm lockfile. Authentication remains available during ember-try reinstalls. No SSH-agent setup or SSH key is required by this workflow. Check required-status names when adopting or changing the workflow; no deployment occurs in compatibility runners.
+
+Each job's setup (checkout, the Git authentication described below, pnpm, Node and
+the frozen-lockfile install) is done by the [`setup-js`](setup-js.md) composite action.
 
 GitHub SSH-style Git dependencies are rewritten to HTTPS and authenticated with
 `PAT_TOKEN`, which must have read access to those repositories. A Git credential

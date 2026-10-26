@@ -1,0 +1,71 @@
+name: 'setup js'
+description: 'Check out the repository, authenticate Git over HTTPS, set up pnpm and Node, and install the dependencies'
+inputs:
+  github-token:
+    description: 'PAT with read access to the private GitHub dependencies, used as GITHUB_TOKEN by pnpm install and by the Git credential helper'
+    required: true
+  node-version:
+    description: 'Node.js version to install, 20 when empty. Composite actions cannot read vars, so a caller using the NODE_VERSION variable passes it here'
+    required: false
+    default: '20'
+  pnpm-version:
+    description: 'pnpm version to install, pass the PNPM_VERSION variable from the caller since composite actions cannot read vars; falls back to the packageManager field of package.json'
+    required: false
+    default: ''
+  registry-url:
+    description: 'npm registry to configure for publishing, i.e. https://npm.pkg.github.com'
+    required: false
+    default: ''
+  ref:
+    description: 'branch, tag or SHA to check out, defaults to the ref or SHA of the triggering event'
+    required: false
+    default: ''
+  fetch-depth:
+    description: 'number of commits to fetch, 0 for the whole history'
+    required: false
+    default: '1'
+  checkout-token:
+    description: 'token used to check the repository out'
+    required: false
+    default: ${{ github.token }}
+  persist-credentials:
+    description: 'keep the checkout token in the Git config, needed by jobs that push commits'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Require the github-token input
+      if: inputs.github-token == ''
+      shell: bash
+      run: |
+        echo "::error title=setup-js::the github-token input is required"
+        exit 1
+    - uses: actions/checkout@v6
+      with:
+        ref: ${{ inputs.ref }}
+        fetch-depth: ${{ inputs.fetch-depth }}
+        token: ${{ inputs.checkout-token }}
+        persist-credentials: ${{ inputs.persist-credentials }}
+    - name: Configure GitHub Git authentication
+      shell: bash
+      run: |
+        git config --global --replace-all url."https://github.com/".insteadOf "ssh://git@github.com/"
+        git config --global --add url."https://github.com/".insteadOf "git@github.com:"
+        git config --global --add url."https://github.com/".insteadOf "git+ssh://git@github.com/"
+        git config --global credential.https://github.com.helper '!f() { if [ "$1" = get ]; then printf "%s\n" "username=x-access-token" "password=$GITHUB_TOKEN" ""; fi; }; f'
+    - uses: pnpm/action-setup@v4
+      with:
+        version: ${{ inputs.pnpm-version }}
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version || '20' }}
+        registry-url: ${{ inputs.registry-url }}
+        cache: pnpm
+    - name: Install dependencies
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GIT_TERMINAL_PROMPT: '0'
+      run: pnpm install --frozen-lockfile

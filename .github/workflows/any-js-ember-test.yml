@@ -4,8 +4,9 @@ on:
   workflow_call:
     inputs:
       node-version:
+        description: Node version; defaults to vars.NODE_VERSION, then 20.
         type: string
-        default: "20"
+        default: ""
       timeout-minutes:
         type: number
         default: 10
@@ -41,23 +42,11 @@ jobs:
       matrix:
         variant: ${{ fromJSON(inputs.test-variants) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: upfluence/actions/setup-js@master
         with:
-          persist-credentials: false
-      - name: Configure GitHub Git authentication
-        run: |
-          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-          git config --global --add url."https://github.com/".insteadOf "git@github.com:"
-          git config --global --add url."https://github.com/".insteadOf "git+ssh://git@github.com/"
-          git config --global credential.https://github.com.helper '!f() { if [ "$1" = get ]; then printf "%s\n" "username=x-access-token" "password=$GITHUB_TOKEN" ""; fi; }; f'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: "${{ vars.PNPM_VERSION }}"
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "${{ inputs.node-version }}"
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          github-token: ${{ secrets.PAT_TOKEN }}
+          node-version: ${{ inputs.node-version || vars.NODE_VERSION || '20' }}
+          pnpm-version: ${{ vars.PNPM_VERSION }}
       - name: Test current dependencies
         env:
           TEST_COMMAND: ${{ matrix.variant.command }}
@@ -77,23 +66,11 @@ jobs:
     env:
       EMBER_TEST_VARIANTS: ${{ inputs.test-variants }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: upfluence/actions/setup-js@master
         with:
-          persist-credentials: false
-      - name: Configure GitHub Git authentication
-        run: |
-          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-          git config --global --add url."https://github.com/".insteadOf "git@github.com:"
-          git config --global --add url."https://github.com/".insteadOf "git+ssh://git@github.com/"
-          git config --global credential.https://github.com.helper '!f() { if [ "$1" = get ]; then printf "%s\n" "username=x-access-token" "password=$GITHUB_TOKEN" ""; fi; }; f'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: "${{ vars.PNPM_VERSION }}"
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "${{ inputs.node-version }}"
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          github-token: ${{ secrets.PAT_TOKEN }}
+          node-version: ${{ inputs.node-version || vars.NODE_VERSION || '20' }}
+          pnpm-version: ${{ vars.PNPM_VERSION }}
       - name: Test additional dependency scenario
         working-directory: ${{ inputs.ember-try-working-directory }}
         env:
