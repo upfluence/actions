@@ -234,7 +234,7 @@ func newCommandContext(cctx cli.CommandContext, lc localConfig, d bool) CommandC
 type configWrapper[T any] struct {
 	Args   T           `env:"" flag:""`
 	Github localConfig `env:"GITHUB" flag:"-"`
-	Debug  bool        `env:"ACTIONS_STEP_DEBUG", flag:"-"`
+	Debug  bool        `env:"ACTIONS_STEP_DEBUG" flag:"-"`
 }
 
 func WithDefaultConfig[T any](v T) Option[T] {
