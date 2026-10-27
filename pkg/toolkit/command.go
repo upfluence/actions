@@ -187,6 +187,8 @@ type CommandContext struct {
 	Client *github.Client
 	Token  string
 
+	OIDCToken OIDCTokenFetcher
+
 	Debug bool
 }
 
@@ -200,7 +202,7 @@ func (cc CommandContext) SplittedRepository() (string, string) {
 	return sr[0], sr[1]
 }
 
-func newCommandContext(cctx cli.CommandContext, lc localConfig, d bool) CommandContext {
+func newCommandContext(cctx cli.CommandContext, lc localConfig, oc oidcConfig, d bool) CommandContext {
 	return CommandContext{
 		CommandContext: cctx,
 		Logger:         newLogger(os.Stdout),
@@ -226,15 +228,17 @@ func newCommandContext(cctx cli.CommandContext, lc localConfig, d bool) CommandC
 				),
 			),
 		),
-		Token: lc.Token,
-		Debug: d,
+		Token:     lc.Token,
+		OIDCToken: newOIDCTokenFetcher(oc),
+		Debug:     d,
 	}
 }
 
 type configWrapper[T any] struct {
-	Args   T           `env:"" flag:""`
-	Github localConfig `env:"GITHUB" flag:"-"`
-	Debug  bool        `env:"ACTIONS_STEP_DEBUG" flag:"-"`
+	Args   T           `env:""                         flag:""`
+	Github localConfig `env:"GITHUB"                   flag:"-"`
+	OIDC   oidcConfig  `env:"ACTIONS_ID_TOKEN_REQUEST" flag:"-"`
+	Debug  bool        `env:"ACTIONS_STEP_DEBUG"       flag:"-"`
 }
 
 func WithDefaultConfig[T any](v T) Option[T] {
@@ -246,7 +250,7 @@ func WithDefaultConfig[T any](v T) Option[T] {
 func WrapCommand[T any](fn func(context.Context, CommandContext, T) error, opts ...cli.DefaultStaticCommandOption[configWrapper[T]]) cli.StaticCommand {
 	return cli.DefaultStaticCommand(
 		func(ctx context.Context, cctx cli.CommandContext, cw configWrapper[T]) error {
-			return fn(ctx, newCommandContext(cctx, cw.Github, cw.Debug), cw.Args)
+			return fn(ctx, newCommandContext(cctx, cw.Github, cw.OIDC, cw.Debug), cw.Args)
 		},
 		opts...,
 	)

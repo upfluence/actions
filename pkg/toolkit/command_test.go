@@ -3,6 +3,7 @@ package toolkit
 import (
 	"bytes"
 	"context"
+	"net/http"
 	"os"
 	"testing"
 
@@ -22,8 +23,8 @@ func TestLogging(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`::debug file=command_test.go,line=20::foobar
-::error file=command_test.go,line=21,title=buf::buz
+		`::debug file=command_test.go,line=21::foobar
+::error file=command_test.go,line=22,title=buf::buz
 `,
 		buf.String(),
 	)
@@ -36,6 +37,7 @@ type fakeConfig struct {
 func TestAppIntegration(t *testing.T) {
 	var (
 		foo string
+		otf OIDCTokenFetcher
 
 		fp, errp = os.CreateTemp(t.TempDir(), "")
 		fs, errs = os.CreateTemp(t.TempDir(), "")
@@ -50,11 +52,14 @@ func TestAppIntegration(t *testing.T) {
 	os.Setenv("GITHUB_PATH", fp.Name())
 	os.Setenv("GITHUB_STATE", fs.Name())
 	os.Setenv("FOO", "bar")
+	os.Setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "https://example.com/idtoken")
+	os.Setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "request-token")
 
 	NewApp(
 		"fiz",
 		func(_ context.Context, cctx CommandContext, fc fakeConfig) error {
 			foo = fc.Foo
+			otf = cctx.OIDCToken
 			cctx.Path.WriteLine("line")
 			cctx.State.WriteKeyValue("key", "value")
 			return nil
@@ -62,6 +67,15 @@ func TestAppIntegration(t *testing.T) {
 	).Execute(context.Background())
 
 	assert.Equal(t, "bar", foo)
+	assert.Equal(
+		t,
+		&oidcTokenFetcher{
+			url:    "https://example.com/idtoken",
+			token:  "request-token",
+			client: http.DefaultClient,
+		},
+		otf,
+	)
 
 	assertFileContent(t, fp, "line\n")
 	assertFileContent(t, fs, "key=value\n")
