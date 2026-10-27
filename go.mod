@@ -1,18 +1,18 @@
 module github.com/upfluence/actions
 
-go 1.23.0
-
-toolchain go1.24.0
+go 1.25.0
 
 require (
 	github.com/Masterminds/semver v1.5.0
+	github.com/coreos/go-oidc/v3 v3.21.0
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/google/go-github/v53 v53.2.0
 	github.com/stretchr/testify v1.8.4
 	github.com/upfluence/cfg v0.3.5
 	github.com/upfluence/errors v0.2.9
 	github.com/upfluence/log v0.0.5
 	github.com/upfluence/pkg v1.14.0
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/oauth2 v0.36.0
 	golang.org/x/text v0.20.0
 )
 
