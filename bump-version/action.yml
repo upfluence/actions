@@ -1,8 +1,12 @@
 name: 'bump version'
 description: ''
 inputs:
+  scheme:
+    description: 'versioning scheme to be used, available schemes are: semver (vMAJOR.MINOR.PATCH), calver_month (vYYYY.M.N)'
+    required: false
+    default: 'semver'
   strategy:
-    description: 'bumping strategy to be used, available strategies are: bump_major, bump_minor, bump_patch, bump_rc'
+    description: 'bumping strategy to be used, available strategies are: bump_major, bump_minor, bump_patch, bump_rc, bump_pre (calver_month only supports bump_patch and bump_rc)'
     required: false
     default: ''
   strategies-by-branch:
@@ -35,7 +39,7 @@ runs:
     - run: chmod +x ~/go/bin/bump-version
       shell: bash
     - id: bump-version
-      run: ~/go/bin/bump-version --strategy ${{ inputs.strategy }} --strategies-by-branch ${{ inputs.strategies-by-branch }}
+      run: ~/go/bin/bump-version --scheme ${{ inputs.scheme }} --strategy ${{ inputs.strategy }} --strategies-by-branch ${{ inputs.strategies-by-branch }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}

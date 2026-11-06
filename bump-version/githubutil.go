@@ -9,7 +9,7 @@ import (
 	"github.com/upfluence/actions/pkg/toolkit"
 )
 
-func fetchLatestTag(ctx context.Context, cctx toolkit.CommandContext) (*version, bool, error) {
+func fetchLatestTag(ctx context.Context, cctx toolkit.CommandContext, s scheme) (*version, bool, error) {
 	org, repo := cctx.SplittedRepository()
 
 	tags, _, err := cctx.Client.Repositories.ListTags(
@@ -26,7 +26,7 @@ func fetchLatestTag(ctx context.Context, cctx toolkit.CommandContext) (*version,
 	var v *version
 
 	for _, tag := range tags {
-		lv, err := parse(tag.GetName())
+		lv, err := s.parse(tag.GetName())
 
 		if err != nil {
 			continue
@@ -42,13 +42,11 @@ func fetchLatestTag(ctx context.Context, cctx toolkit.CommandContext) (*version,
 		}
 	}
 
-	t, err := parse(tags[0].GetName())
-
-	return t, true, err
+	return v, v != nil, nil
 }
 
-func fetchContext(ctx context.Context, cctx toolkit.CommandContext) (*version, []string, error) {
-	tag, ok, err := fetchLatestTag(ctx, cctx)
+func fetchContext(ctx context.Context, cctx toolkit.CommandContext, s scheme) (*version, []string, error) {
+	tag, ok, err := fetchLatestTag(ctx, cctx, s)
 
 	if err != nil {
 		return nil, nil, err
