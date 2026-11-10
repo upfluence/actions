@@ -164,6 +164,7 @@ type CommandContext struct {
 	CommandContext cli.CommandContext
 
 	Logger log.Logger
+	Mask   Masker
 
 	StepSummary LineWriter
 	Path        LineWriter
@@ -206,6 +207,7 @@ func newCommandContext(cctx cli.CommandContext, lc localConfig, oc oidcConfig, d
 	return CommandContext{
 		CommandContext: cctx,
 		Logger:         newLogger(os.Stdout),
+		Mask:           masker{w: os.Stdout},
 		StepSummary:    &lineWriter{w: &lazyFile{fname: lc.StepSummary}},
 		Path:           &lineWriter{w: &lazyFile{fname: lc.Path}},
 		Env:            &keyValueWriter{w: &lazyFile{fname: lc.Env}},
