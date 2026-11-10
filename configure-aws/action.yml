@@ -1,0 +1,42 @@
+name: 'configure aws'
+description: 'assume an AWS role with the GitHub OIDC token and export the credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION, AWS_REGION) to $GITHUB_ENV, requires the id-token: write permission'
+inputs:
+  role-arn:
+    description: 'ARN of the role to assume, its trust policy must allow the token.actions.githubusercontent.com web identity'
+    required: true
+  region:
+    description: 'AWS region exported as AWS_DEFAULT_REGION and AWS_REGION'
+    required: false
+    default: 'us-east-1'
+  audience:
+    description: 'audience of the GitHub OIDC token'
+    required: false
+    default: 'sts.amazonaws.com'
+  duration:
+    description: 'lifetime of the credentials (i.e. 1h, 90m), STS defaults to 1h when empty, cannot exceed the role maximum session duration'
+    required: false
+    default: ''
+  cli-version:
+    required: false
+    description: 'version of the cli to use'
+    default: 'latest'
+runs:
+  using: 'composite'
+  steps:
+    - run: |
+        mkdir -p ~/go/bin
+        if [ "${{ inputs.cli-version }}" = "latest" ]; then
+          curl -fsSL https://github.com/upfluence/actions/releases/latest/download/configure-aws > ~/go/bin/configure-aws
+        else
+          curl -fsSL https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/configure-aws > ~/go/bin/configure-aws
+        fi
+      shell: bash
+    - run: chmod +x ~/go/bin/configure-aws
+      shell: bash
+    - run: ~/go/bin/configure-aws
+      shell: bash
+      env:
+        ROLE_ARN: ${{ inputs.role-arn }}
+        REGION: ${{ inputs.region }}
+        AUDIENCE: ${{ inputs.audience }}
+        DURATION: ${{ inputs.duration }}
