@@ -1,0 +1,45 @@
+name: 'configure go proxy'
+description: 'export GOPROXY, GOPRIVATE and GONOPROXY to $GITHUB_ENV to pull the private modules through a go proxy authenticated with the GitHub OIDC token, requires the id-token: write permission'
+inputs:
+  host:
+    description: 'host (and path) of the go proxy, i.e. goproxy.example.com/proxy'
+    required: true
+  user:
+    description: 'user to authenticate against the go proxy, the GitHub OIDC token is used as password'
+    required: true
+  private-modules:
+    description: '[CSV] module path prefixes exported as GOPRIVATE, i.e. github.com/example'
+    required: true
+  audience:
+    description: 'audience of the GitHub OIDC token, defaults to the repository owner URL when empty'
+    required: false
+    default: ''
+  skip-golang-proxy:
+    description: 'do not fall back on proxy.golang.org before fetching the modules directly'
+    required: false
+    default: 'false'
+  cli-version:
+    required: false
+    description: 'version of the cli to use'
+    default: 'latest'
+runs:
+  using: 'composite'
+  steps:
+    - run: |
+        mkdir -p ~/go/bin
+        if [ "${{ inputs.cli-version }}" = "latest" ]; then
+          curl -fsSL https://github.com/upfluence/actions/releases/latest/download/configure-go-proxy > ~/go/bin/configure-go-proxy
+        else
+          curl -fsSL https://github.com/upfluence/actions/releases/download/${{ inputs.cli-version }}/configure-go-proxy > ~/go/bin/configure-go-proxy
+        fi
+      shell: bash
+    - run: chmod +x ~/go/bin/configure-go-proxy
+      shell: bash
+    - run: ~/go/bin/configure-go-proxy
+      shell: bash
+      env:
+        GOPROXY_HOST: ${{ inputs.host }}
+        GOPROXY_USER: ${{ inputs.user }}
+        PRIVATE_MODULES: ${{ inputs.private-modules }}
+        AUDIENCE: ${{ inputs.audience }}
+        SKIP_GOLANG_PROXY: ${{ inputs.skip-golang-proxy }}
