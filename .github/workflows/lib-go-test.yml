@@ -46,15 +46,15 @@ jobs:
         ports:
           - 5432:5432
       cassandra:
-        image: ${{ inputs.with-cassandra && 'upfluence/cassandra' || '' }}
+        image: ${{ inputs.with-cassandra && 'cassandra:5.0' || '' }}
         env:
           CASSANDRA_CLUSTER_NAME: "dev-env"
-          LOCAL_ENV: true
         options: >-
-          --health-cmd "nc -z 127.0.0.1 7199"
+          --health-cmd "cqlsh -e 'describe keyspaces'"
           --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-timeout 10s
+          --health-start-period 30s
+          --health-retries 15
         ports:
           - 9042:9042
       redis:
